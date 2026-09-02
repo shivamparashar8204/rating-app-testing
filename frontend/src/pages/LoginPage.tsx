@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { UserRole } from '../types';
 
 declare global {
   interface Window {
@@ -23,6 +24,7 @@ export function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<UserRole | ''>('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const googleButtonRef = useRef<HTMLDivElement>(null);
@@ -99,10 +101,16 @@ export function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!role) {
+      setError('Please select an account type');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      await login({ email, password });
+      await login({ email, password, role: role as UserRole });
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
         const user = JSON.parse(storedUser);
@@ -148,6 +156,22 @@ export function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
+          <div className="form-group">
+            <label htmlFor="role">Account Type</label>
+            <select
+              id="role"
+              value={role}
+              onChange={(e) => setRole(e.target.value as UserRole | '')}
+              className="role-select"
+              required
+            >
+              <option value="">Select account type</option>
+              <option value="CUSTOMER">Customer</option>
+              <option value="STORE_OWNER">Store Owner</option>
+              <option value="ADMIN">System Administrator</option>
+            </select>
+          </div>
+
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input

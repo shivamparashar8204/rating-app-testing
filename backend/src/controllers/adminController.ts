@@ -106,11 +106,11 @@ export async function createStore(req: AuthenticatedRequest, res: Response): Pro
       return;
     }
 
-    const [existingStoreRows] = await pool.query<StoreRow[]>(
-      'SELECT id FROM stores WHERE store_owner_id = ?',
+    const existingStoreResult = await pool.query<StoreRow>(
+      'SELECT id FROM stores WHERE store_owner_id = $1',
       [storeOwnerId]
     );
-    if (existingStoreRows.length > 0) {
+    if (existingStoreResult.rows.length > 0) {
       res.status(409).json({ success: false, message: 'This user already owns a store' } as ApiResponse);
       return;
     }
@@ -127,11 +127,11 @@ export async function createUser(req: AuthenticatedRequest, res: Response): Prom
   try {
     const { name, email, address, password, role } = req.body;
 
-    const [existingRows] = await pool.query<UserRow[]>(
-      'SELECT id FROM users WHERE email = ?',
+    const existingResult = await pool.query<UserRow>(
+      'SELECT id FROM users WHERE email = $1',
       [email.trim().toLowerCase()]
     );
-    if (existingRows.length > 0) {
+    if (existingResult.rows.length > 0) {
       res.status(409).json({ success: false, message: 'Email already registered' } as ApiResponse);
       return;
     }

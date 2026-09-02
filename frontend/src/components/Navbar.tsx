@@ -48,7 +48,7 @@ export function Navbar({ onSearch }: NavbarProps) {
         <div className="navbar-search">
           <input
             type="text"
-            placeholder="Search restaurants by name or address..."
+            placeholder="Search restaurants by name, cuisine or city..."
             value={searchQuery}
             onChange={handleSearchChange}
             className="navbar-search-input"

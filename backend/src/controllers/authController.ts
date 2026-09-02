@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { AuthenticatedRequest, SignupBody, LoginBody, ChangePasswordBody } from '../types';
+import { AuthenticatedRequest, SignupBody, LoginBody, ChangePasswordBody, ApiResponse, SafeUser } from '../types';
 import * as authService from '../services/authService';
 import { generateToken } from '../middleware/auth';
 
@@ -9,21 +9,21 @@ export async function signup(req: AuthenticatedRequest, res: Response): Promise<
 
     const existingUser = await authService.findUserByEmail(email);
     if (existingUser) {
-      res.status(409).json({ error: 'Email already registered' });
+      res.status(409).json({ success: false, message: 'Email already registered' } as ApiResponse);
       return;
     }
 
-    const user = await authService.createUser(name, email, address, password);
+    const user = await authService.createUser(name, email, address, password, 'CUSTOMER');
     const token = generateToken(user.id, user.role);
 
     res.status(201).json({
+      success: true,
       message: 'User created successfully',
-      token,
-      user,
-    });
+      data: { token, user },
+    } as ApiResponse);
   } catch (error) {
     console.error('Signup error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ success: false, message: 'Internal server error' } as ApiResponse);
   }
 }
 
@@ -33,18 +33,18 @@ export async function login(req: AuthenticatedRequest, res: Response): Promise<v
 
     const user = await authService.findUserByEmail(email);
     if (!user) {
-      res.status(401).json({ error: 'Invalid email or password' });
+      res.status(401).json({ success: false, message: 'Invalid email or password' } as ApiResponse);
       return;
     }
 
     const isValidPassword = await authService.verifyPassword(password, user.password_hash);
     if (!isValidPassword) {
-      res.status(401).json({ error: 'Invalid email or password' });
+      res.status(401).json({ success: false, message: 'Invalid email or password' } as ApiResponse);
       return;
     }
 
     const token = generateToken(user.id, user.role);
-    const safeUser = {
+    const safeUser: SafeUser = {
       id: user.id,
       name: user.name,
       email: user.email,
@@ -55,13 +55,13 @@ export async function login(req: AuthenticatedRequest, res: Response): Promise<v
     };
 
     res.json({
+      success: true,
       message: 'Login successful',
-      token,
-      user: safeUser,
-    });
+      data: { token, user: safeUser },
+    } as ApiResponse);
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ success: false, message: 'Internal server error' } as ApiResponse);
   }
 }
 
@@ -70,53 +70,32 @@ export async function changePassword(req: AuthenticatedRequest, res: Response): 
     const { currentPassword, newPassword }: ChangePasswordBody = req.body;
 
     if (!req.user) {
-      res.status(401).json({ error: 'Authentication required' });
+      res.status(401).json({ success: false, message: 'Authentication required' } as ApiResponse);
       return;
     }
 
     const user = await authService.findUserById(req.user.userId);
     if (!user) {
-      res.status(404).json({ error: 'User not found' });
+      res.status(404).json({ success: false, message: 'User not found' } as ApiResponse);
       return;
     }
 
     const isValidPassword = await authService.verifyPassword(currentPassword, user.password_hash);
     if (!isValidPassword) {
-      res.status(401).json({ error: 'Current password is incorrect' });
+      res.status(401).json({ success: false, message: 'Current password is incorrect' } as ApiResponse);
       return;
     }
 
     if (currentPassword === newPassword) {
-      res.status(400).json({ error: 'New password must be different from current password' });
+      res.status(400).json({ success: false, message: 'New password must be different from current password' } as ApiResponse);
       return;
     }
 
     await authService.updatePassword(req.user.userId, newPassword);
 
-    res.json({ message: 'Password updated successfully' });
+    res.json({ success: true, message: 'Password updated successfully' } as ApiResponse);
   } catch (error) {
     console.error('Change password error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-}
-
-export async function getProfile(req: AuthenticatedRequest, res: Response): Promise<void> {
-  try {
-    if (!req.user) {
-      res.status(401).json({ error: 'Authentication required' });
-      return;
-    }
-
-    const user = await authService.findUserById(req.user.userId);
-    if (!user) {
-      res.status(404).json({ error: 'User not found' });
-      return;
-    }
-
-    const { password_hash: _, ...safeUser } = user;
-    res.json({ user: safeUser });
-  } catch (error) {
-    console.error('Get profile error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ success: false, message: 'Internal server error' } as ApiResponse);
   }
 }

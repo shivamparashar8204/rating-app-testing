@@ -2,6 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import pool from './config/database';
 import authRoutes from './routes/auth';
+import storeOwnerRoutes from './routes/storeOwner';
+import customerRoutes from './routes/customer';
+import adminRoutes from './routes/admin';
 
 const app = express();
 
@@ -32,5 +35,8 @@ app.get('/api', (_req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/store-owner', storeOwnerRoutes);
+app.use('/api/customer', customerRoutes);
+app.use('/api/admin', adminRoutes);
 
 export default app;

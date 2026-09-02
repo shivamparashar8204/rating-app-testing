@@ -91,7 +91,7 @@ export function validateSignup(req: Request, res: Response, next: NextFunction):
   if (passwordError) errors.password = passwordError;
 
   if (Object.keys(errors).length > 0) {
-    res.status(400).json({ errors });
+    res.status(400).json({ success: false, message: 'Validation failed', errors });
     return;
   }
 
@@ -102,15 +102,16 @@ export function validateLogin(req: Request, res: Response, next: NextFunction): 
   const errors: ValidationErrors = {};
   const { email, password } = req.body;
 
-  const emailError = validateEmail(email);
-  if (emailError) errors.email = emailError;
+  if (!email || typeof email !== 'string' || email.trim().length === 0) {
+    errors.email = 'Email or username is required';
+  }
 
   if (!password || typeof password !== 'string') {
     errors.password = 'Password is required';
   }
 
   if (Object.keys(errors).length > 0) {
-    res.status(400).json({ errors });
+    res.status(400).json({ success: false, message: 'Validation failed', errors });
     return;
   }
 
@@ -129,7 +130,95 @@ export function validateChangePassword(req: Request, res: Response, next: NextFu
   if (newPasswordError) errors.newPassword = newPasswordError;
 
   if (Object.keys(errors).length > 0) {
-    res.status(400).json({ errors });
+    res.status(400).json({ success: false, message: 'Validation failed', errors });
+    return;
+  }
+
+  next();
+}
+
+export function validateAdminCreateUser(req: Request, res: Response, next: NextFunction): void {
+  const errors: ValidationErrors = {};
+  const { name, email, address, password, role } = req.body;
+
+  const nameError = validateName(name);
+  if (nameError) errors.name = nameError;
+
+  const emailError = validateEmail(email);
+  if (emailError) errors.email = emailError;
+
+  const addressError = validateAddress(address);
+  if (addressError) errors.address = addressError;
+
+  const passwordError = validatePassword(password);
+  if (passwordError) errors.password = passwordError;
+
+  const validRoles = ['ADMIN', 'CUSTOMER', 'STORE_OWNER'];
+  if (!role || typeof role !== 'string' || !validRoles.includes(role.toUpperCase())) {
+    errors.role = 'Role must be one of: ADMIN, CUSTOMER, STORE_OWNER';
+  }
+
+  if (Object.keys(errors).length > 0) {
+    res.status(400).json({ success: false, message: 'Validation failed', errors });
+    return;
+  }
+
+  next();
+}
+
+export function validateAdminCreateStore(req: Request, res: Response, next: NextFunction): void {
+  const errors: ValidationErrors = {};
+  const { name, email, address, storeOwnerId } = req.body;
+
+  const nameError = validateName(name);
+  if (nameError) errors.name = nameError;
+
+  const emailError = validateEmail(email);
+  if (emailError) errors.email = emailError;
+
+  const addressError = validateAddress(address);
+  if (addressError) errors.address = addressError;
+
+  if (!storeOwnerId || typeof storeOwnerId !== 'number' || storeOwnerId < 1) {
+    errors.storeOwnerId = 'Valid store owner ID is required';
+  }
+
+  if (Object.keys(errors).length > 0) {
+    res.status(400).json({ success: false, message: 'Validation failed', errors });
+    return;
+  }
+
+  next();
+}
+
+export function validateCustomerRating(req: Request, res: Response, next: NextFunction): void {
+  const errors: ValidationErrors = {};
+  const { storeId, rating } = req.body;
+
+  if (!storeId || typeof storeId !== 'number' || storeId < 1) {
+    errors.storeId = 'Valid store ID is required';
+  }
+
+  const ratingError = validateRating(rating);
+  if (ratingError) errors.rating = ratingError;
+
+  if (Object.keys(errors).length > 0) {
+    res.status(400).json({ success: false, message: 'Validation failed', errors });
+    return;
+  }
+
+  next();
+}
+
+export function validateCustomerUpdateRating(req: Request, res: Response, next: NextFunction): void {
+  const errors: ValidationErrors = {};
+  const { rating } = req.body;
+
+  const ratingError = validateRating(rating);
+  if (ratingError) errors.rating = ratingError;
+
+  if (Object.keys(errors).length > 0) {
+    res.status(400).json({ success: false, message: 'Validation failed', errors });
     return;
   }
 

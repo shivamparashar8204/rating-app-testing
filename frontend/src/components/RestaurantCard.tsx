@@ -6,12 +6,13 @@ interface RestaurantCardProps {
   id: number;
   name: string;
   address: string;
+  cuisine: string;
   rating: number;
   reviewCount: number;
   image: string;
 }
 
-export function RestaurantCard({ id, name, address, rating, reviewCount, image }: RestaurantCardProps) {
+export function RestaurantCard({ id, name, address, cuisine, rating, reviewCount, image }: RestaurantCardProps) {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -28,6 +29,7 @@ export function RestaurantCard({ id, name, address, rating, reviewCount, image }
         <div className="restaurant-card-rating-badge">
           <StarRating rating={rating} size="sm" />
         </div>
+        <div className="restaurant-card-cuisine-badge">{cuisine}</div>
       </div>
       <div className="restaurant-card-content">
         <h3 className="restaurant-card-name">{name}</h3>

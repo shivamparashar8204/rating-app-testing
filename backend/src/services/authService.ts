@@ -18,31 +18,30 @@ export async function createUser(
 ): Promise<SafeUser> {
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
-  const [result] = await pool.query(
+  const result = await pool.query(
     `INSERT INTO users (name, email, address, password_hash, role)
-     VALUES (?, ?, ?, ?, ?)`,
+     VALUES ($1, $2, $3, $4, $5)
+     RETURNING *`,
     [name.trim(), email.trim().toLowerCase(), address.trim(), passwordHash, role]
   );
 
-  const insertId = (result as { insertId: number }).insertId;
-  const [rows] = await pool.query<UserRow[]>('SELECT * FROM users WHERE id = ?', [insertId]);
-  return toSafeUser(rows[0]);
+  return toSafeUser(result.rows[0]);
 }
 
 export async function findUserByEmail(email: string): Promise<UserRow | null> {
-  const [rows] = await pool.query<UserRow[]>(
-    'SELECT * FROM users WHERE email = ?',
+  const result = await pool.query(
+    'SELECT * FROM users WHERE email = $1',
     [email.trim().toLowerCase()]
   );
-  return rows[0] || null;
+  return result.rows[0] || null;
 }
 
 export async function findUserById(id: number): Promise<UserRow | null> {
-  const [rows] = await pool.query<UserRow[]>(
-    'SELECT * FROM users WHERE id = ?',
+  const result = await pool.query(
+    'SELECT * FROM users WHERE id = $1',
     [id]
   );
-  return rows[0] || null;
+  return result.rows[0] || null;
 }
 
 export async function verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
@@ -52,7 +51,37 @@ export async function verifyPassword(plainPassword: string, hashedPassword: stri
 export async function updatePassword(userId: number, newPassword: string): Promise<void> {
   const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
   await pool.query(
-    'UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
     [passwordHash, userId]
   );
+}
+
+export async function findUserByGoogleId(googleId: string): Promise<UserRow | null> {
+  const result = await pool.query(
+    'SELECT * FROM users WHERE google_id = $1',
+    [googleId]
+  );
+  return result.rows[0] || null;
+}
+
+export async function linkGoogleId(userId: number, googleId: string): Promise<void> {
+  await pool.query(
+    'UPDATE users SET google_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+    [googleId, userId]
+  );
+}
+
+export async function createGoogleUser(
+  name: string,
+  email: string,
+  googleId: string
+): Promise<SafeUser> {
+  const result = await pool.query(
+    `INSERT INTO users (name, email, address, google_id, role)
+     VALUES ($1, $2, $3, $4, $5)
+     RETURNING *`,
+    [name.trim(), email.trim().toLowerCase(), '', googleId, 'CUSTOMER']
+  );
+
+  return toSafeUser(result.rows[0]);
 }

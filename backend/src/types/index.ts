@@ -1,5 +1,4 @@
 import { Request } from 'express';
-import { RowDataPacket } from 'mysql2';
 
 export type UserRole = 'ADMIN' | 'CUSTOMER' | 'STORE_OWNER';
 
@@ -41,18 +40,23 @@ export interface ChangePasswordBody {
   newPassword: string;
 }
 
-export interface UserRow extends RowDataPacket {
+export interface GoogleAuthBody {
+  credential: string;
+}
+
+export interface UserRow {
   id: number;
   name: string;
   email: string;
   address: string | null;
-  password_hash: string;
+  password_hash: string | null;
+  google_id: string | null;
   role: UserRole;
   created_at: Date;
   updated_at: Date;
 }
 
-export interface StoreRow extends RowDataPacket {
+export interface StoreRow {
   id: number;
   name: string;
   email: string;
@@ -62,7 +66,7 @@ export interface StoreRow extends RowDataPacket {
   updated_at: Date;
 }
 
-export interface RatingRow extends RowDataPacket {
+export interface RatingRow {
   id: number;
   user_id: number;
   store_id: number;
@@ -105,13 +109,13 @@ export interface CustomerUpdateRatingBody {
   rating: number;
 }
 
-export interface DashboardCounts extends RowDataPacket {
+export interface DashboardCounts {
   total_users: number;
   total_stores: number;
   total_ratings: number;
 }
 
-export interface StoreWithAvgRating extends RowDataPacket {
+export interface StoreWithAvgRating {
   id: number;
   name: string;
   email: string;
@@ -120,7 +124,7 @@ export interface StoreWithAvgRating extends RowDataPacket {
   avg_rating: number | null;
 }
 
-export interface StoreWithUserRating extends RowDataPacket {
+export interface StoreWithUserRating {
   id: number;
   name: string;
   email: string;
@@ -130,7 +134,7 @@ export interface StoreWithUserRating extends RowDataPacket {
   user_rating: number | null;
 }
 
-export interface RatingWithUser extends RowDataPacket {
+export interface RatingWithUser {
   id: number;
   rating: number;
   user_id: number;
@@ -140,7 +144,7 @@ export interface RatingWithUser extends RowDataPacket {
   updated_at: Date;
 }
 
-export interface AdminUserDetail extends RowDataPacket {
+export interface AdminUserDetail {
   id: number;
   name: string;
   email: string;
@@ -149,7 +153,7 @@ export interface AdminUserDetail extends RowDataPacket {
   created_at: Date;
 }
 
-export interface AdminStoreDetail extends RowDataPacket {
+export interface AdminStoreDetail {
   id: number;
   name: string;
   email: string;
@@ -161,7 +165,7 @@ export interface AdminStoreDetail extends RowDataPacket {
   total_ratings: number;
 }
 
-export interface StoreOwnerProfile extends RowDataPacket {
+export interface StoreOwnerProfile {
   id: number;
   name: string;
   email: string;

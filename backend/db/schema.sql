@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(255) UNIQUE NOT NULL,
   address VARCHAR(400),
   password_hash VARCHAR(255) NOT NULL,
-  role ENUM('ADMIN', 'USER', 'STORE_OWNER') NOT NULL DEFAULT 'USER',
+  role ENUM('ADMIN', 'CUSTOMER', 'STORE_OWNER') NOT NULL DEFAULT 'CUSTOMER',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS ratings (
   CONSTRAINT unique_user_store_rating UNIQUE (user_id, store_id)
 );
 
--- Indexes for better query performance
+-- Indexes
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_role ON users(role);
 CREATE INDEX idx_users_name ON users(name);

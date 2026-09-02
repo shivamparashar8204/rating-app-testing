@@ -13,8 +13,8 @@ app.use(express.json());
 
 app.get('/health', async (_req, res) => {
   try {
-    const [rows] = await pool.query('SELECT NOW() AS now');
-    const row = (rows as { now: Date }[])[0];
+    const result = await pool.query('SELECT NOW() AS now');
+    const row = result.rows[0];
     res.json({
       status: 'OK',
       database: 'Connected',

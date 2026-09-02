@@ -1,34 +1,24 @@
 require('dotenv').config();
-const mysql = require('mysql2/promise');
+const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
 
 async function initializeDatabase() {
-  let connection;
+  let pool;
 
   try {
-    console.log('Connecting to MySQL...');
-    connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
+    console.log('Connecting to PostgreSQL...');
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     });
 
-    console.log('Connected to MySQL server.');
+    console.log('Connected to PostgreSQL server.');
 
     const schemaPath = path.join(__dirname, 'schema.sql');
     const schema = fs.readFileSync(schemaPath, 'utf8');
 
-    const statements = schema
-      .split(';')
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
-
-    for (const statement of statements) {
-      console.log(`Executing: ${statement.substring(0, 60)}...`);
-      await connection.query(statement);
-    }
+    await pool.query(schema);
 
     console.log('Schema created successfully.');
     console.log('Database initialization complete.');
@@ -36,8 +26,8 @@ async function initializeDatabase() {
     console.error('Database initialization failed:', error.message);
     process.exit(1);
   } finally {
-    if (connection) {
-      await connection.end();
+    if (pool) {
+      await pool.end();
     }
   }
 }

@@ -314,6 +314,18 @@ a:hover {
   box-shadow: var(--shadow-md);
 }
 
+.restaurant-card-cuisine-badge {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: var(--gold);
+  color: var(--navy);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
 .restaurant-card-content {
   padding: 16px;
 }

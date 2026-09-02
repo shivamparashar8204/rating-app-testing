@@ -8,6 +8,7 @@
     "dev": "ts-node src/server.ts",
     "dev:watch": "ts-node-dev --respawn src/server.ts",
     "db:init": "node db/init.js",
+    "db:seed": "ts-node db/seed.ts",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],

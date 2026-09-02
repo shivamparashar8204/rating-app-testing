@@ -4,7 +4,7 @@ import { UserRow, SafeUser, UserRole } from '../types';
 
 const SALT_ROUNDS = 10;
 
-function toSafeUser(user: UserRow): SafeUser {
+export function toSafeUser(user: UserRow): SafeUser {
   const { password_hash: _, ...safeUser } = user;
   return safeUser;
 }
@@ -14,7 +14,7 @@ export async function createUser(
   email: string,
   address: string,
   password: string,
-  role: UserRole = 'USER'
+  role: UserRole = 'CUSTOMER'
 ): Promise<SafeUser> {
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 

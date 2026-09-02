@@ -8,7 +8,7 @@ export function authenticate(req: AuthenticatedRequest, res: Response, next: Nex
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    res.status(401).json({ error: 'Access denied. No token provided.' });
+    res.status(401).json({ success: false, message: 'Access denied. No token provided.' });
     return;
   }
 
@@ -21,20 +21,20 @@ export function authenticate(req: AuthenticatedRequest, res: Response, next: Nex
       role: decoded.role,
     };
     next();
-  } catch (error) {
-    res.status(401).json({ error: 'Invalid or expired token.' });
+  } catch {
+    res.status(401).json({ success: false, message: 'Invalid or expired token.' });
   }
 }
 
 export function authorize(...roles: UserRole[]) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      res.status(401).json({ error: 'Access denied. No token provided.' });
+      res.status(401).json({ success: false, message: 'Access denied. No token provided.' });
       return;
     }
 
     if (!roles.includes(req.user.role)) {
-      res.status(403).json({ error: 'Access denied. Insufficient permissions.' });
+      res.status(403).json({ success: false, message: 'Access denied. Insufficient permissions.' });
       return;
     }
 
@@ -44,5 +44,6 @@ export function authorize(...roles: UserRole[]) {
 
 export function generateToken(userId: number, role: UserRole): string {
   const payload: JwtPayload = { userId, role };
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as any);
 }

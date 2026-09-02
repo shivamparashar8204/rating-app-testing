@@ -5,19 +5,15 @@ import bcrypt from 'bcryptjs';
 const SALT_ROUNDS = 10;
 
 export async function getDashboard(): Promise<DashboardCounts> {
-  const [userRows] = await pool.query('SELECT COUNT(*) AS total_users FROM users');
-  const [storeRows] = await pool.query('SELECT COUNT(*) AS total_stores FROM stores');
-  const [ratingRows] = await pool.query('SELECT COUNT(*) AS total_ratings FROM ratings');
-
-  const users = (userRows as DashboardCounts[])[0];
-  const stores = (storeRows as DashboardCounts[])[0];
-  const ratings = (ratingRows as DashboardCounts[])[0];
+  const userResult = await pool.query('SELECT COUNT(*) AS total_users FROM users');
+  const storeResult = await pool.query('SELECT COUNT(*) AS total_stores FROM stores');
+  const ratingResult = await pool.query('SELECT COUNT(*) AS total_ratings FROM ratings');
 
   return {
-    total_users: users.total_users,
-    total_stores: stores.total_stores,
-    total_ratings: ratings.total_ratings,
-  } as DashboardCounts;
+    total_users: parseInt(userResult.rows[0].total_users, 10),
+    total_stores: parseInt(storeResult.rows[0].total_stores, 10),
+    total_ratings: parseInt(ratingResult.rows[0].total_ratings, 10),
+  };
 }
 
 export async function getAllUsers(
@@ -30,28 +26,33 @@ export async function getAllUsers(
 
   let query = `SELECT id, name, email, address, role, created_at FROM users WHERE 1=1`;
   const params: string[] = [];
+  let paramIndex = 1;
 
   if (filters.name) {
-    query += ` AND name LIKE ?`;
+    query += ` AND name LIKE $${paramIndex}`;
     params.push(`%${filters.name}%`);
+    paramIndex++;
   }
   if (filters.email) {
-    query += ` AND email LIKE ?`;
+    query += ` AND email LIKE $${paramIndex}`;
     params.push(`%${filters.email}%`);
+    paramIndex++;
   }
   if (filters.address) {
-    query += ` AND address LIKE ?`;
+    query += ` AND address LIKE $${paramIndex}`;
     params.push(`%${filters.address}%`);
+    paramIndex++;
   }
   if (filters.role) {
-    query += ` AND role = ?`;
+    query += ` AND role = $${paramIndex}`;
     params.push(filters.role.toUpperCase());
+    paramIndex++;
   }
 
   query += ` ORDER BY ${sortField} ${sortOrder}`;
 
-  const [rows] = await pool.query<AdminUserDetail[]>(query, params);
-  return rows;
+  const result = await pool.query(query, params);
+  return result.rows;
 }
 
 export async function getUserById(id: number): Promise<{
@@ -60,30 +61,30 @@ export async function getUserById(id: number): Promise<{
   avg_rating?: number | null;
   total_ratings?: number;
 } | null> {
-  const [userRows] = await pool.query<AdminUserDetail[]>(
-    'SELECT id, name, email, address, role, created_at FROM users WHERE id = ?',
+  const userResult = await pool.query(
+    'SELECT id, name, email, address, role, created_at FROM users WHERE id = $1',
     [id]
   );
-  const user = userRows[0];
+  const user = userResult.rows[0];
   if (!user) return null;
 
   if (user.role === 'STORE_OWNER') {
-    const [storeRows] = await pool.query<StoreRow[]>(
-      'SELECT * FROM stores WHERE store_owner_id = ?',
+    const storeResult = await pool.query(
+      'SELECT * FROM stores WHERE store_owner_id = $1',
       [id]
     );
-    const store = storeRows[0];
+    const store = storeResult.rows[0];
     if (store) {
-      const [ratingRows] = await pool.query(
-        'SELECT AVG(rating) AS avg_rating, COUNT(*) AS total_ratings FROM ratings WHERE store_id = ?',
+      const ratingResult = await pool.query(
+        'SELECT AVG(rating) AS avg_rating, COUNT(*) AS total_ratings FROM ratings WHERE store_id = $1',
         [store.id]
       );
-      const ratingData = (ratingRows as { avg_rating: number | null; total_ratings: number }[])[0];
+      const ratingData = ratingResult.rows[0];
       return {
         user,
         store,
-        avg_rating: ratingData.avg_rating ? Math.round(ratingData.avg_rating * 10) / 10 : null,
-        total_ratings: ratingData.total_ratings,
+        avg_rating: ratingData.avg_rating ? Math.round(parseFloat(ratingData.avg_rating) * 10) / 10 : null,
+        total_ratings: parseInt(ratingData.total_ratings, 10),
       };
     }
   }
@@ -102,7 +103,7 @@ export async function getAllStores(
   let query = `
     SELECT s.id, s.name, s.email, s.address, s.store_owner_id,
            u.name AS owner_name, u.email AS owner_email,
-           IFNULL(AVG(r.rating), 0) AS avg_rating,
+           COALESCE(AVG(r.rating), 0) AS avg_rating,
            COUNT(r.id) AS total_ratings
     FROM stores s
     JOIN users u ON s.store_owner_id = u.id
@@ -110,25 +111,29 @@ export async function getAllStores(
     WHERE 1=1
   `;
   const params: string[] = [];
+  let paramIndex = 1;
 
   if (filters.name) {
-    query += ` AND s.name LIKE ?`;
+    query += ` AND s.name LIKE $${paramIndex}`;
     params.push(`%${filters.name}%`);
+    paramIndex++;
   }
   if (filters.email) {
-    query += ` AND s.email LIKE ?`;
+    query += ` AND s.email LIKE $${paramIndex}`;
     params.push(`%${filters.email}%`);
+    paramIndex++;
   }
   if (filters.address) {
-    query += ` AND s.address LIKE ?`;
+    query += ` AND s.address LIKE $${paramIndex}`;
     params.push(`%${filters.address}%`);
+    paramIndex++;
   }
 
   query += ` GROUP BY s.id, s.name, s.email, s.address, s.store_owner_id, u.name, u.email`;
   query += ` ORDER BY ${sortField} ${sortOrder}`;
 
-  const [rows] = await pool.query<AdminStoreDetail[]>(query, params);
-  return rows;
+  const result = await pool.query(query, params);
+  return result.rows;
 }
 
 export async function createStore(
@@ -137,13 +142,12 @@ export async function createStore(
   address: string,
   storeOwnerId: number
 ): Promise<StoreRow> {
-  const [result] = await pool.query(
-    `INSERT INTO stores (name, email, address, store_owner_id) VALUES (?, ?, ?, ?)`,
+  const result = await pool.query(
+    `INSERT INTO stores (name, email, address, store_owner_id) VALUES ($1, $2, $3, $4)
+     RETURNING *`,
     [name.trim(), email.trim().toLowerCase(), address.trim(), storeOwnerId]
   );
-  const insertId = (result as { insertId: number }).insertId;
-  const [rows] = await pool.query<StoreRow[]>('SELECT * FROM stores WHERE id = ?', [insertId]);
-  return rows[0];
+  return result.rows[0];
 }
 
 export async function createUser(
@@ -154,35 +158,31 @@ export async function createUser(
   role: string
 ): Promise<{ id: number; name: string; email: string; address: string | null; role: string; created_at: Date }> {
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-  const [result] = await pool.query(
-    `INSERT INTO users (name, email, address, password_hash, role) VALUES (?, ?, ?, ?, ?)`,
+  const result = await pool.query(
+    `INSERT INTO users (name, email, address, password_hash, role) VALUES ($1, $2, $3, $4, $5)
+     RETURNING id, name, email, address, role, created_at`,
     [name.trim(), email.trim().toLowerCase(), address.trim(), passwordHash, role.toUpperCase()]
   );
-  const insertId = (result as { insertId: number }).insertId;
-  const [rows] = await pool.query<AdminUserDetail[]>(
-    'SELECT id, name, email, address, role, created_at FROM users WHERE id = ?',
-    [insertId]
-  );
-  return rows[0];
+  return result.rows[0];
 }
 
 export async function getStoreById(id: number): Promise<AdminStoreDetail | null> {
-  const [rows] = await pool.query<AdminStoreDetail[]>(
+  const result = await pool.query(
     `SELECT s.id, s.name, s.email, s.address, s.store_owner_id,
             u.name AS owner_name, u.email AS owner_email,
-            IFNULL(AVG(r.rating), 0) AS avg_rating,
+            COALESCE(AVG(r.rating), 0) AS avg_rating,
             COUNT(r.id) AS total_ratings
      FROM stores s
      JOIN users u ON s.store_owner_id = u.id
      LEFT JOIN ratings r ON s.id = r.store_id
-     WHERE s.id = ?
+     WHERE s.id = $1
      GROUP BY s.id, s.name, s.email, s.address, s.store_owner_id, u.name, u.email`,
     [id]
   );
-  return rows[0] || null;
+  return result.rows[0] || null;
 }
 
 export async function findUserByIdForAdmin(id: number): Promise<UserRow | null> {
-  const [rows] = await pool.query<UserRow[]>('SELECT * FROM users WHERE id = ?', [id]);
-  return rows[0] || null;
+  const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+  return result.rows[0] || null;
 }

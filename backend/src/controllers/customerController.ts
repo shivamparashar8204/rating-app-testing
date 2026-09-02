@@ -35,11 +35,11 @@ export async function submitRating(req: AuthenticatedRequest, res: Response): Pr
       return;
     }
 
-    const [existingRows] = await pool.query(
-      'SELECT id FROM ratings WHERE user_id = ? AND store_id = ?',
+    const existingResult = await pool.query(
+      'SELECT id FROM ratings WHERE user_id = $1 AND store_id = $2',
       [req.user.userId, storeId]
-    ) as [{ id: number }[], unknown];
-    const existingRating = (existingRows as { id: number }[])[0];
+    );
+    const existingRating = existingResult.rows[0];
     if (existingRating) {
       res.status(409).json({ success: false, message: 'You have already rated this store. Use PUT to modify your rating.' } as ApiResponse);
       return;

@@ -7,14 +7,12 @@ import pool from '../src/config/database';
 const SALT_ROUNDS = 10;
 
 async function seed() {
-  let connection;
   try {
-    console.log('Connecting to MySQL...');
-    connection = await pool.getConnection();
+    console.log('Connecting to PostgreSQL...');
     console.log('Connected.');
 
-    const [existingUsers] = await connection.query('SELECT COUNT(*) as count FROM users');
-    const count = (existingUsers as { count: number }[])[0].count;
+    const existingUsers = await pool.query('SELECT COUNT(*) as count FROM users');
+    const count = parseInt(existingUsers.rows[0].count, 10);
     if (count > 0) {
       console.log('Database already seeded. Skipping.');
       return;
@@ -25,43 +23,43 @@ async function seed() {
     const customerHash = await bcrypt.hash('customer', SALT_ROUNDS);
     const storeOwnerHash = await bcrypt.hash('storeowner', SALT_ROUNDS);
 
-    await connection.query(
-      `INSERT INTO users (name, email, address, password_hash, role) VALUES (?, ?, ?, ?, ?)`,
+    await pool.query(
+      `INSERT INTO users (name, email, address, password_hash, role) VALUES ($1, $2, $3, $4, $5)`,
       ['System Administrator Account', 'admin', '123 Admin Street', adminHash, 'ADMIN']
     );
-    await connection.query(
-      `INSERT INTO users (name, email, address, password_hash, role) VALUES (?, ?, ?, ?, ?)`,
+    await pool.query(
+      `INSERT INTO users (name, email, address, password_hash, role) VALUES ($1, $2, $3, $4, $5)`,
       ['Regular Customer Account', 'customer', '456 Customer Avenue', customerHash, 'CUSTOMER']
     );
-    await connection.query(
-      `INSERT INTO users (name, email, address, password_hash, role) VALUES (?, ?, ?, ?, ?)`,
+    await pool.query(
+      `INSERT INTO users (name, email, address, password_hash, role) VALUES ($1, $2, $3, $4, $5)`,
       ['Store Owner Test Account', 'storeowner', '789 Store Boulevard', storeOwnerHash, 'STORE_OWNER']
     );
 
-    const [storeOwnerRows] = await connection.query(
-      'SELECT id FROM users WHERE email = ?',
+    const storeOwnerResult = await pool.query(
+      'SELECT id FROM users WHERE email = $1',
       ['storeowner']
     );
-    const storeOwnerId = (storeOwnerRows as { id: number }[])[0].id;
+    const storeOwnerId = storeOwnerResult.rows[0].id;
 
     console.log('Seeding stores...');
-    await connection.query(
-      `INSERT INTO stores (name, email, address, store_owner_id) VALUES (?, ?, ?, ?)`,
+    await pool.query(
+      `INSERT INTO stores (name, email, address, store_owner_id) VALUES ($1, $2, $3, $4)`,
       ['Alpha Electronics Store', 'alpha@example.com', '100 Tech Park Road', storeOwnerId]
     );
 
-    const [customerRows] = await connection.query(
-      'SELECT id FROM users WHERE email = ?',
+    const customerResult = await pool.query(
+      'SELECT id FROM users WHERE email = $1',
       ['customer']
     );
-    const customerId = (customerRows as { id: number }[])[0].id;
+    const customerId = customerResult.rows[0].id;
 
-    const [storeRows] = await connection.query('SELECT id FROM stores LIMIT 1');
-    const storeId = (storeRows as { id: number }[])[0].id;
+    const storeResult = await pool.query('SELECT id FROM stores LIMIT 1');
+    const storeId = storeResult.rows[0].id;
 
     console.log('Seeding ratings...');
-    await connection.query(
-      `INSERT INTO ratings (user_id, store_id, rating) VALUES (?, ?, ?)`,
+    await pool.query(
+      `INSERT INTO ratings (user_id, store_id, rating) VALUES ($1, $2, $3)`,
       [customerId, storeId, 4]
     );
 
@@ -75,7 +73,6 @@ async function seed() {
     console.error('Seed failed:', error);
     process.exit(1);
   } finally {
-    if (connection) connection.release();
     await pool.end();
   }
 }

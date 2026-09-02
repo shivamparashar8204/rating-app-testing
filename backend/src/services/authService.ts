@@ -18,30 +18,31 @@ export async function createUser(
 ): Promise<SafeUser> {
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
-  const result = await pool.query<UserRow>(
+  const [result] = await pool.query(
     `INSERT INTO users (name, email, address, password_hash, role)
-     VALUES ($1, $2, $3, $4, $5)
-     RETURNING *`,
+     VALUES (?, ?, ?, ?, ?)`,
     [name.trim(), email.trim().toLowerCase(), address.trim(), passwordHash, role]
   );
 
-  return toSafeUser(result.rows[0]);
+  const insertId = (result as { insertId: number }).insertId;
+  const [rows] = await pool.query<UserRow[]>('SELECT * FROM users WHERE id = ?', [insertId]);
+  return toSafeUser(rows[0]);
 }
 
 export async function findUserByEmail(email: string): Promise<UserRow | null> {
-  const result = await pool.query<UserRow>(
-    'SELECT * FROM users WHERE email = $1',
+  const [rows] = await pool.query<UserRow[]>(
+    'SELECT * FROM users WHERE email = ?',
     [email.trim().toLowerCase()]
   );
-  return result.rows[0] || null;
+  return rows[0] || null;
 }
 
 export async function findUserById(id: number): Promise<UserRow | null> {
-  const result = await pool.query<UserRow>(
-    'SELECT * FROM users WHERE id = $1',
+  const [rows] = await pool.query<UserRow[]>(
+    'SELECT * FROM users WHERE id = ?',
     [id]
   );
-  return result.rows[0] || null;
+  return rows[0] || null;
 }
 
 export async function verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
@@ -51,7 +52,7 @@ export async function verifyPassword(plainPassword: string, hashedPassword: stri
 export async function updatePassword(userId: number, newPassword: string): Promise<void> {
   const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
   await pool.query(
-    'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+    'UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
     [passwordHash, userId]
   );
 }

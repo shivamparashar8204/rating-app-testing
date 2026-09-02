@@ -10,11 +10,12 @@ app.use(express.json());
 
 app.get('/health', async (_req, res) => {
   try {
-    const result = await pool.query('SELECT NOW()');
+    const [rows] = await pool.query('SELECT NOW() AS now');
+    const row = (rows as { now: Date }[])[0];
     res.json({
       status: 'OK',
       database: 'Connected',
-      timestamp: result.rows[0].now,
+      timestamp: row.now,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';

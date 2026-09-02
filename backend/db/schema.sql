@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS users (
   name VARCHAR(60) NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   address VARCHAR(400),
-  password_hash VARCHAR(255) NOT NULL,
+  password_hash VARCHAR(255),
+  google_id VARCHAR(255) UNIQUE NULL,
   role ENUM('ADMIN', 'CUSTOMER', 'STORE_OWNER') NOT NULL DEFAULT 'CUSTOMER',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -40,6 +41,7 @@ CREATE TABLE IF NOT EXISTS ratings (
 
 -- Indexes
 CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_google_id ON users(google_id);
 CREATE INDEX idx_users_role ON users(role);
 CREATE INDEX idx_users_name ON users(name);
 CREATE INDEX idx_stores_name ON stores(name);

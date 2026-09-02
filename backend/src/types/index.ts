@@ -41,12 +41,17 @@ export interface ChangePasswordBody {
   newPassword: string;
 }
 
+export interface GoogleAuthBody {
+  credential: string;
+}
+
 export interface UserRow extends RowDataPacket {
   id: number;
   name: string;
   email: string;
   address: string | null;
-  password_hash: string;
+  password_hash: string | null;
+  google_id: string | null;
   role: UserRole;
   created_at: Date;
   updated_at: Date;

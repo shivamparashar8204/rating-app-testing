@@ -9,7 +9,7 @@ const googleClient = new OAuth2Client(googleClientId);
 
 export async function signup(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const { name, email, address, password }: SignupBody = req.body;
+    const { name, email, address, password, role }: SignupBody = req.body;
 
     const existingUser = await authService.findUserByEmail(email);
     if (existingUser) {
@@ -17,7 +17,7 @@ export async function signup(req: AuthenticatedRequest, res: Response): Promise<
       return;
     }
 
-    const user = await authService.createUser(name, email, address, password, 'CUSTOMER');
+    const user = await authService.createUser(name, email, address, password, role.toUpperCase() as 'CUSTOMER' | 'STORE_OWNER');
     const token = generateToken(user.id, user.role);
 
     res.status(201).json({
@@ -33,11 +33,39 @@ export async function signup(req: AuthenticatedRequest, res: Response): Promise<
 
 export async function login(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const { email, password }: LoginBody = req.body;
+    const { email, password, role }: LoginBody = req.body;
+    const selectedRole = role.toUpperCase() as 'ADMIN' | 'CUSTOMER' | 'STORE_OWNER';
+
+    // DEVELOPMENT ONLY: hardcoded admin credentials for local testing
+    if (process.env.NODE_ENV !== 'production' && email === 'admin' && password === 'admin' && selectedRole === 'ADMIN') {
+      const token = generateToken(0, 'ADMIN');
+      const now = new Date();
+      const safeUser: SafeUser = {
+        id: 0,
+        name: 'System Administrator',
+        email: 'admin',
+        address: '',
+        role: 'ADMIN',
+        created_at: now,
+        updated_at: now,
+      };
+
+      res.json({
+        success: true,
+        message: 'Login successful',
+        data: { token, user: safeUser },
+      } as ApiResponse);
+      return;
+    }
 
     const user = await authService.findUserByEmail(email);
     if (!user || !user.password_hash) {
       res.status(401).json({ success: false, message: 'Invalid email or password' } as ApiResponse);
+      return;
+    }
+
+    if (user.role !== selectedRole) {
+      res.status(401).json({ success: false, message: `Invalid credentials for ${selectedRole.toLowerCase()} login` } as ApiResponse);
       return;
     }
 

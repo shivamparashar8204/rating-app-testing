@@ -28,11 +28,13 @@ export interface SignupBody {
   email: string;
   address: string;
   password: string;
+  role: UserRole;
 }
 
 export interface LoginBody {
   email: string;
   password: string;
+  role: UserRole;
 }
 
 export interface ChangePasswordBody {
@@ -93,11 +95,48 @@ export interface AdminCreateUserBody {
   role: UserRole;
 }
 
+export interface AdminUpdateUserBody {
+  name?: string;
+  email?: string;
+  address?: string;
+  password?: string;
+  role?: UserRole;
+}
+
 export interface AdminCreateStoreBody {
   name: string;
   email: string;
   address: string;
   storeOwnerId: number;
+}
+
+export interface AdminUpdateStoreBody {
+  name?: string;
+  email?: string;
+  address?: string;
+}
+
+export interface AdminCreateRatingBody {
+  userId: number;
+  storeId: number;
+  rating: number;
+}
+
+export interface AdminUpdateRatingBody {
+  rating: number;
+}
+
+export interface AdminRatingDetail {
+  id: number;
+  rating: number;
+  user_id: number;
+  user_name: string;
+  user_email: string;
+  store_id: number;
+  store_name: string;
+  store_email: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface CustomerRatingBody {

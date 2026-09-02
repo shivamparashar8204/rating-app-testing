@@ -76,7 +76,7 @@ export function validateRating(rating: unknown): string | null {
 
 export function validateSignup(req: Request, res: Response, next: NextFunction): void {
   const errors: ValidationErrors = {};
-  const { name, email, address, password } = req.body;
+  const { name, email, address, password, role } = req.body;
 
   const nameError = validateName(name);
   if (nameError) errors.name = nameError;
@@ -90,6 +90,11 @@ export function validateSignup(req: Request, res: Response, next: NextFunction):
   const passwordError = validatePassword(password);
   if (passwordError) errors.password = passwordError;
 
+  const validSignupRoles = ['CUSTOMER', 'STORE_OWNER'];
+  if (!role || typeof role !== 'string' || !validSignupRoles.includes(role.toUpperCase())) {
+    errors.role = 'Role must be either CUSTOMER or STORE_OWNER';
+  }
+
   if (Object.keys(errors).length > 0) {
     res.status(400).json({ success: false, message: 'Validation failed', errors });
     return;
@@ -100,7 +105,7 @@ export function validateSignup(req: Request, res: Response, next: NextFunction):
 
 export function validateLogin(req: Request, res: Response, next: NextFunction): void {
   const errors: ValidationErrors = {};
-  const { email, password } = req.body;
+  const { email, password, role } = req.body;
 
   if (!email || typeof email !== 'string' || email.trim().length === 0) {
     errors.email = 'Email or username is required';
@@ -108,6 +113,11 @@ export function validateLogin(req: Request, res: Response, next: NextFunction): 
 
   if (!password || typeof password !== 'string') {
     errors.password = 'Password is required';
+  }
+
+  const validRoles = ['ADMIN', 'CUSTOMER', 'STORE_OWNER'];
+  if (!role || typeof role !== 'string' || !validRoles.includes(role.toUpperCase())) {
+    errors.role = 'Role must be one of: ADMIN, CUSTOMER, STORE_OWNER';
   }
 
   if (Object.keys(errors).length > 0) {

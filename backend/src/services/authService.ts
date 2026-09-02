@@ -56,3 +56,34 @@ export async function updatePassword(userId: number, newPassword: string): Promi
     [passwordHash, userId]
   );
 }
+
+export async function findUserByGoogleId(googleId: string): Promise<UserRow | null> {
+  const [rows] = await pool.query<UserRow[]>(
+    'SELECT * FROM users WHERE google_id = ?',
+    [googleId]
+  );
+  return rows[0] || null;
+}
+
+export async function linkGoogleId(userId: number, googleId: string): Promise<void> {
+  await pool.query(
+    'UPDATE users SET google_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [googleId, userId]
+  );
+}
+
+export async function createGoogleUser(
+  name: string,
+  email: string,
+  googleId: string
+): Promise<SafeUser> {
+  const [result] = await pool.query(
+    `INSERT INTO users (name, email, address, google_id, role)
+     VALUES (?, ?, ?, ?, ?)`,
+    [name.trim(), email.trim().toLowerCase(), '', googleId, 'CUSTOMER']
+  );
+
+  const insertId = (result as { insertId: number }).insertId;
+  const [rows] = await pool.query<UserRow[]>('SELECT * FROM users WHERE id = ?', [insertId]);
+  return toSafeUser(rows[0]);
+}

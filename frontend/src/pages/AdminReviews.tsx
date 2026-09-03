@@ -16,8 +16,8 @@ export function AdminReviews() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedRating, setSelectedRating] = useState<AdminRatingDetail | null>(null);
   const [formData, setFormData] = useState({
-    userId: 0,
-    storeId: 0,
+    userId: '',
+    storeId: '',
     rating: 5,
   });
   const [editFormData, setEditFormData] = useState({
@@ -124,7 +124,7 @@ export function AdminReviews() {
       });
       showToast('Review created successfully', 'success');
       setShowCreateModal(false);
-      setFormData({ userId: 0, storeId: 0, rating: 5 });
+      setFormData({ userId: '', storeId: '', rating: 5 });
       loadRatings();
     } catch (err: unknown) {
       const apiError = err as { response?: { data?: { message?: string } } };
@@ -299,9 +299,9 @@ export function AdminReviews() {
                 <label>Customer</label>
                 <select
                   value={formData.userId}
-                  onChange={(e) => setFormData({ ...formData, userId: Number(e.target.value) })}
+                  onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
                 >
-                  <option value={0}>Select a customer</option>
+                  <option value="">Select a customer</option>
                   {customers.map((customer) => (
                     <option key={customer.id} value={customer.id}>
                       {customer.name} ({customer.email})
@@ -314,9 +314,9 @@ export function AdminReviews() {
                 <label>Store</label>
                 <select
                   value={formData.storeId}
-                  onChange={(e) => setFormData({ ...formData, storeId: Number(e.target.value) })}
+                  onChange={(e) => setFormData({ ...formData, storeId: e.target.value })}
                 >
-                  <option value={0}>Select a store</option>
+                  <option value="">Select a store</option>
                   {stores.map((store) => (
                     <option key={store.id} value={store.id}>
                       {store.name}

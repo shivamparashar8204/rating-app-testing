@@ -1,7 +1,7 @@
 export type UserRole = 'ADMIN' | 'CUSTOMER' | 'STORE_OWNER';
 
 export interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
   address: string | null;
@@ -14,7 +14,6 @@ export interface AuthResponse {
   success: boolean;
   message: string;
   data: {
-    token: string;
     user: User;
   };
 }
@@ -26,19 +25,19 @@ export interface ApiResponse<T = unknown> {
 }
 
 export interface Store {
-  id: number;
+  id: string;
   name: string;
   email: string;
   address: string;
-  store_owner_id: number;
+  store_owner_id: string;
   avg_rating: number | null;
   user_rating: number | null;
 }
 
 export interface Rating {
-  id: number;
+  id: string;
   rating: number;
-  user_id: number;
+  user_id: string;
   user_name: string;
   user_email: string;
   created_at: string;
@@ -55,7 +54,7 @@ export interface DashboardData {
 }
 
 export interface Restaurant {
-  id: number;
+  id: string;
   name: string;
   address: string;
   rating: number;
@@ -64,7 +63,7 @@ export interface Restaurant {
 }
 
 export interface Review {
-  id: number;
+  id: string;
   userName: string;
   date: string;
   rating: number;
@@ -86,7 +85,7 @@ export interface SignupData {
 }
 
 export interface AdminUserDetail {
-  id: number;
+  id: string;
   name: string;
   email: string;
   address: string | null;
@@ -95,11 +94,11 @@ export interface AdminUserDetail {
 }
 
 export interface AdminStoreDetail {
-  id: number;
+  id: string;
   name: string;
   email: string;
   address: string;
-  store_owner_id: number;
+  store_owner_id: string;
   owner_name: string;
   owner_email: string;
   avg_rating: number | null;
@@ -108,12 +107,12 @@ export interface AdminStoreDetail {
 }
 
 export interface AdminRatingDetail {
-  id: number;
+  id: string;
   rating: number;
-  user_id: number;
+  user_id: string;
   user_name: string;
   user_email: string;
-  store_id: number;
+  store_id: string;
   store_name: string;
   store_email: string;
   created_at: string;

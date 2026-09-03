@@ -9,7 +9,7 @@ import { Store } from '../types';
 
 const INDIAN_RESTAURANTS = [
   {
-    id: 1,
+    id: '1',
     name: "Aai's Kitchen",
     address: 'FC Road, Pune, Maharashtra',
     cuisine: 'Maharashtrian',
@@ -18,7 +18,7 @@ const INDIAN_RESTAURANTS = [
     image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=300&fit=crop',
   },
   {
-    id: 2,
+    id: '2',
     name: 'Shree Misal House',
     address: 'Dadar West, Mumbai, Maharashtra',
     cuisine: 'Maharashtrian',
@@ -27,7 +27,7 @@ const INDIAN_RESTAURANTS = [
     image: 'https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=400&h=300&fit=crop',
   },
   {
-    id: 3,
+    id: '3',
     name: 'Maharashtra Darbar',
     address: 'Nashik Road, Nashik, Maharashtra',
     cuisine: 'Maharashtrian',
@@ -36,7 +36,7 @@ const INDIAN_RESTAURANTS = [
     image: 'https://images.unsplash.com/photo-1579027989536-b7b1f875659b?w=400&h=300&fit=crop',
   },
   {
-    id: 4,
+    id: '4',
     name: 'Punjabi Zaika',
     address: 'Connaught Place, New Delhi',
     cuisine: 'North Indian',
@@ -45,7 +45,7 @@ const INDIAN_RESTAURANTS = [
     image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=400&h=300&fit=crop',
   },
   {
-    id: 5,
+    id: '5',
     name: 'Delhi Darbar',
     address: 'Karol Bagh, New Delhi',
     cuisine: 'North Indian',
@@ -54,7 +54,7 @@ const INDIAN_RESTAURANTS = [
     image: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=400&h=300&fit=crop',
   },
   {
-    id: 6,
+    id: '6',
     name: 'Amritsari Rasoi',
     address: 'Lajpat Nagar, New Delhi',
     cuisine: 'Punjabi',
@@ -66,21 +66,21 @@ const INDIAN_RESTAURANTS = [
 
 const INDIAN_REVIEWS = [
   {
-    id: 1,
+    id: '1',
     userName: 'Priya Sharma',
     date: '2 weeks ago',
     rating: 5,
     text: 'The Misal Pav at Aai\'s Kitchen is simply authentic! The spicy Kolhapuri tarri reminds me of my grandmother\'s cooking in Pune.',
   },
   {
-    id: 2,
+    id: '2',
     userName: 'Rajesh Kumar',
     date: '3 weeks ago',
     rating: 4,
     text: 'Delhi Darbar\'s Butter Chicken is creamy and rich. Perfect with their garlic naan. A must-visit for North Indian food lovers!',
   },
   {
-    id: 3,
+    id: '3',
     userName: 'Anjali Deshmukh',
     date: '1 month ago',
     rating: 5,

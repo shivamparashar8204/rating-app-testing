@@ -45,7 +45,7 @@ export const adminApi = {
     return response.data.data;
   },
 
-  getUserById: async (id: number) => {
+  getUserById: async (id: string) => {
     const response = await api.get<{ success: boolean; data: AdminUserWithStore }>(`/admin/users/${id}`);
     return response.data.data;
   },
@@ -61,7 +61,7 @@ export const adminApi = {
     return response.data;
   },
 
-  updateUser: async (id: number, data: {
+  updateUser: async (id: string, data: {
     name?: string;
     email?: string;
     address?: string;
@@ -83,7 +83,7 @@ export const adminApi = {
     return response.data.data;
   },
 
-  getStoreById: async (id: number) => {
+  getStoreById: async (id: string) => {
     const response = await api.get<{ success: boolean; data: AdminStoreDetail }>(`/admin/stores/${id}`);
     return response.data.data;
   },
@@ -92,13 +92,13 @@ export const adminApi = {
     name: string;
     email: string;
     address: string;
-    storeOwnerId: number;
+    storeOwnerId: string;
   }) => {
     const response = await api.post<{ success: boolean; message: string; data: AdminStoreDetail }>('/admin/stores', data);
     return response.data;
   },
 
-  updateStore: async (id: number, data: {
+  updateStore: async (id: string, data: {
     name?: string;
     email?: string;
     address?: string;
@@ -118,26 +118,26 @@ export const adminApi = {
     return response.data.data;
   },
 
-  getRatingById: async (id: number) => {
+  getRatingById: async (id: string) => {
     const response = await api.get<{ success: boolean; data: AdminRatingDetail }>(`/admin/ratings/${id}`);
     return response.data.data;
   },
 
   createRating: async (data: {
-    userId: number;
-    storeId: number;
+    userId: string;
+    storeId: string;
     rating: number;
   }) => {
     const response = await api.post<{ success: boolean; message: string }>('/admin/ratings', data);
     return response.data;
   },
 
-  updateRating: async (id: number, data: { rating: number }) => {
+  updateRating: async (id: string, data: { rating: number }) => {
     const response = await api.put<{ success: boolean; message: string }>(`/admin/ratings/${id}`, data);
     return response.data;
   },
 
-  deleteRating: async (id: number) => {
+  deleteRating: async (id: string) => {
     const response = await api.delete<{ success: boolean; message: string }>(`/admin/ratings/${id}`);
     return response.data;
   },

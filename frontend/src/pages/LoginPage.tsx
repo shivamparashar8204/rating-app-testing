@@ -20,7 +20,7 @@ declare global {
 }
 
 export function LoginPage() {
-  const { login, googleLogin } = useAuth();
+  const { login, googleLogin, user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,6 +28,24 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const googleButtonRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      switch (user.role) {
+        case 'ADMIN':
+          navigate('/admin');
+          break;
+        case 'STORE_OWNER':
+          navigate('/store-owner');
+          break;
+        case 'CUSTOMER':
+          navigate('/customer');
+          break;
+        default:
+          navigate('/');
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
 
   useEffect(() => {
     const loadGoogleScript = () => {
@@ -71,25 +89,6 @@ export function LoginPage() {
 
     try {
       await googleLogin(response.credential);
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        const user = JSON.parse(storedUser);
-        switch (user.role) {
-          case 'ADMIN':
-            navigate('/admin');
-            break;
-          case 'STORE_OWNER':
-            navigate('/store-owner');
-            break;
-          case 'CUSTOMER':
-            navigate('/customer');
-            break;
-          default:
-            navigate('/');
-        }
-      } else {
-        navigate('/');
-      }
     } catch (err: unknown) {
       const apiError = err as { response?: { data?: { message?: string } } };
       setError(apiError.response?.data?.message || 'Google login failed. Please try again.');
@@ -111,25 +110,6 @@ export function LoginPage() {
 
     try {
       await login({ email, password, role: role as UserRole });
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        const user = JSON.parse(storedUser);
-        switch (user.role) {
-          case 'ADMIN':
-            navigate('/admin');
-            break;
-          case 'STORE_OWNER':
-            navigate('/store-owner');
-            break;
-          case 'CUSTOMER':
-            navigate('/customer');
-            break;
-          default:
-            navigate('/');
-        }
-      } else {
-        navigate('/');
-      }
     } catch (err: unknown) {
       const apiError = err as { response?: { data?: { message?: string } } };
       setError(apiError.response?.data?.message || 'Login failed. Please try again.');

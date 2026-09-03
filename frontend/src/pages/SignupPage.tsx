@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { UserRole } from '../types';
 
 declare global {
   interface Window {
@@ -19,7 +20,7 @@ declare global {
 }
 
 export function SignupPage() {
-  const { signup, googleLogin } = useAuth();
+  const { signup, googleLogin, user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
@@ -27,11 +28,30 @@ export function SignupPage() {
     address: '',
     password: '',
     confirmPassword: '',
+    role: '' as UserRole | '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const googleButtonRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      switch (user.role) {
+        case 'ADMIN':
+          navigate('/admin');
+          break;
+        case 'STORE_OWNER':
+          navigate('/store-owner');
+          break;
+        case 'CUSTOMER':
+          navigate('/customer');
+          break;
+        default:
+          navigate('/');
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
 
   useEffect(() => {
     const loadGoogleScript = () => {
@@ -75,25 +95,6 @@ export function SignupPage() {
 
     try {
       await googleLogin(response.credential);
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        const user = JSON.parse(storedUser);
-        switch (user.role) {
-          case 'ADMIN':
-            navigate('/admin');
-            break;
-          case 'STORE_OWNER':
-            navigate('/store-owner');
-            break;
-          case 'CUSTOMER':
-            navigate('/customer');
-            break;
-          default:
-            navigate('/');
-        }
-      } else {
-        navigate('/');
-      }
     } catch (err: unknown) {
       const apiError = err as { response?: { data?: { message?: string } } };
       setApiError(apiError.response?.data?.message || 'Google signup failed. Please try again.');
@@ -104,6 +105,10 @@ export function SignupPage() {
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
+
+    if (!formData.role) {
+      newErrors.role = 'Please select an account type';
+    }
 
     if (!formData.name || formData.name.length < 20) {
       newErrors.name = 'Name must be at least 20 characters';
@@ -141,7 +146,7 @@ export function SignupPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
@@ -163,8 +168,8 @@ export function SignupPage() {
         email: formData.email,
         address: formData.address,
         password: formData.password,
+        role: formData.role as UserRole,
       });
-      navigate('/customer');
     } catch (err: unknown) {
       const apiError = err as { response?: { data?: { message?: string } } };
       setApiError(apiError.response?.data?.message || 'Signup failed. Please try again.');
@@ -191,6 +196,27 @@ export function SignupPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
+          <div className="form-group">
+            <label htmlFor="role">Account Type</label>
+            <select
+              id="role"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="role-select"
+              required
+            >
+              <option value="">Select account type</option>
+              <option value="CUSTOMER">Customer</option>
+              <option value="STORE_OWNER">Store Owner</option>
+              <option value="ADMIN" disabled>System Administrator (Admin only)</option>
+            </select>
+            {formData.role === 'ADMIN' && (
+              <span className="form-hint">Administrator accounts are created by an existing administrator.</span>
+            )}
+            {errors.role && <span className="form-error">{errors.role}</span>}
+          </div>
+
           <div className="form-group">
             <label htmlFor="name">Name</label>
             <input

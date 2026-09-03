@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 interface RestaurantCardProps {
-  id: number;
+  id: string;
   name: string;
   address: string;
   cuisine: string;

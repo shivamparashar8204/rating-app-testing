@@ -10,12 +10,26 @@ backend/build/
 backend/npm-debug.log*
 backend/.DS_Store
 
+# Backend Cloud Functions
+backend/functions/node_modules/
+backend/functions/lib/
+backend/functions/.DS_Store
+
 # Frontend
 frontend/node_modules/
 frontend/dist/
 frontend/build/
 frontend/npm-debug.log*
 frontend/.DS_Store
+
+# Firebase
+.firebase/
+*-debug.log
+*.cache
+
+# Service account keys
+*-firebase-adminsdk*.json
+service-account*.json
 
 # IDE
 .vscode/

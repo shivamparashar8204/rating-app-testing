@@ -108,7 +108,7 @@ export function validateLogin(req: Request, res: Response, next: NextFunction): 
   const { email, password, role } = req.body;
 
   if (!email || typeof email !== 'string' || email.trim().length === 0) {
-    errors.email = 'Email or username is required';
+    errors.email = 'Email is required';
   }
 
   if (!password || typeof password !== 'string') {
@@ -189,7 +189,7 @@ export function validateAdminCreateStore(req: Request, res: Response, next: Next
   const addressError = validateAddress(address);
   if (addressError) errors.address = addressError;
 
-  if (!storeOwnerId || typeof storeOwnerId !== 'number' || storeOwnerId < 1) {
+  if (!storeOwnerId) {
     errors.storeOwnerId = 'Valid store owner ID is required';
   }
 
@@ -205,7 +205,7 @@ export function validateCustomerRating(req: Request, res: Response, next: NextFu
   const errors: ValidationErrors = {};
   const { storeId, rating } = req.body;
 
-  if (!storeId || typeof storeId !== 'number' || storeId < 1) {
+  if (!storeId) {
     errors.storeId = 'Valid store ID is required';
   }
 

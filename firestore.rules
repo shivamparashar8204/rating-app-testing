@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isValidRating() {
+      return request.resource.data.rating is number &&
+        request.resource.data.rating >= 1 &&
+        request.resource.data.rating <= 5 &&
+        request.resource.data.rating == request.resource.data.rating.toInt();
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAuthenticated() && (
+        (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']))
+        || isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /stores/{storeId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin();
+      allow update: if isAdmin() || (
+        isAuthenticated() &&
+        getUserRole() == 'STORE_OWNER' &&
+        resource.data.store_owner_id == request.auth.uid
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /ratings/{ratingId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        getUserRole() == 'CUSTOMER' &&
+        request.resource.data.user_id == request.auth.uid &&
+        isValidRating();
+      allow update: if isAuthenticated() && (
+        (resource.data.user_id == request.auth.uid && getUserRole() == 'CUSTOMER')
+        || isAdmin()
+      ) && isValidRating();
+      allow delete: if isAuthenticated() && (
+        (resource.data.user_id == request.auth.uid && getUserRole() == 'CUSTOMER')
+        || isAdmin()
+      );
+    }
+  }
+}

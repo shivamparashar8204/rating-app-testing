@@ -1,7 +1,8 @@
 import { Response } from 'express';
-import { AuthenticatedRequest, ApiResponse, UserRow, StoreRow } from '../types';
+import { AuthenticatedRequest } from '../middleware/auth';
+import { db } from '../config/firebase-admin';
 import * as adminService from '../services/adminService';
-import pool from '../config/database';
+import { ApiResponse, UserRole } from '../types';
 
 export async function getDashboard(_req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
@@ -34,18 +35,12 @@ export async function getAllUsers(req: AuthenticatedRequest, res: Response): Pro
 
 export async function getUserById(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) {
-      res.status(400).json({ success: false, message: 'Invalid user ID' } as ApiResponse);
-      return;
-    }
-
+    const id = req.params.id;
     const result = await adminService.getUserById(id);
     if (!result) {
       res.status(404).json({ success: false, message: 'User not found' } as ApiResponse);
       return;
     }
-
     res.json({ success: true, data: result } as ApiResponse);
   } catch (error) {
     console.error('Get user details error:', error);
@@ -55,12 +50,7 @@ export async function getUserById(req: AuthenticatedRequest, res: Response): Pro
 
 export async function updateUser(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) {
-      res.status(400).json({ success: false, message: 'Invalid user ID' } as ApiResponse);
-      return;
-    }
-
+    const id = req.params.id;
     const existingUser = await adminService.findUserByIdForAdmin(id);
     if (!existingUser) {
       res.status(404).json({ success: false, message: 'User not found' } as ApiResponse);
@@ -68,11 +58,11 @@ export async function updateUser(req: AuthenticatedRequest, res: Response): Prom
     }
 
     if (req.body.email && req.body.email.trim().toLowerCase() !== existingUser.email) {
-      const emailCheck = await pool.query<UserRow>(
-        'SELECT id FROM users WHERE email = $1 AND id != $2',
-        [req.body.email.trim().toLowerCase(), id]
-      );
-      if (emailCheck.rows.length > 0) {
+      const emailCheck = await db.collection('users')
+        .where('email', '==', req.body.email.trim().toLowerCase())
+        .get();
+      const otherUsers = emailCheck.docs.filter((doc) => doc.id !== id);
+      if (otherUsers.length > 0) {
         res.status(409).json({ success: false, message: 'Email already registered' } as ApiResponse);
         return;
       }
@@ -106,18 +96,12 @@ export async function getAllStores(req: AuthenticatedRequest, res: Response): Pr
 
 export async function getStoreById(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) {
-      res.status(400).json({ success: false, message: 'Invalid store ID' } as ApiResponse);
-      return;
-    }
-
+    const id = req.params.id;
     const store = await adminService.getStoreById(id);
     if (!store) {
       res.status(404).json({ success: false, message: 'Store not found' } as ApiResponse);
       return;
     }
-
     res.json({ success: true, data: store } as ApiResponse);
   } catch (error) {
     console.error('Get store details error:', error);
@@ -127,12 +111,7 @@ export async function getStoreById(req: AuthenticatedRequest, res: Response): Pr
 
 export async function updateStore(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) {
-      res.status(400).json({ success: false, message: 'Invalid store ID' } as ApiResponse);
-      return;
-    }
-
+    const id = req.params.id;
     const existingStore = await adminService.getStoreById(id);
     if (!existingStore) {
       res.status(404).json({ success: false, message: 'Store not found' } as ApiResponse);
@@ -140,11 +119,11 @@ export async function updateStore(req: AuthenticatedRequest, res: Response): Pro
     }
 
     if (req.body.email && req.body.email.trim().toLowerCase() !== existingStore.email) {
-      const emailCheck = await pool.query<StoreRow>(
-        'SELECT id FROM stores WHERE email = $1 AND id != $2',
-        [req.body.email.trim().toLowerCase(), id]
-      );
-      if (emailCheck.rows.length > 0) {
+      const emailCheck = await db.collection('stores')
+        .where('email', '==', req.body.email.trim().toLowerCase())
+        .get();
+      const otherStores = emailCheck.docs.filter((doc) => doc.id !== id);
+      if (otherStores.length > 0) {
         res.status(409).json({ success: false, message: 'Store email already registered' } as ApiResponse);
         return;
       }
@@ -172,11 +151,10 @@ export async function createStore(req: AuthenticatedRequest, res: Response): Pro
       return;
     }
 
-    const existingStoreResult = await pool.query<StoreRow>(
-      'SELECT id FROM stores WHERE store_owner_id = $1',
-      [storeOwnerId]
-    );
-    if (existingStoreResult.rows.length > 0) {
+    const existingStoreResult = await db.collection('stores')
+      .where('store_owner_id', '==', storeOwnerId)
+      .get();
+    if (!existingStoreResult.empty) {
       res.status(409).json({ success: false, message: 'This user already owns a store' } as ApiResponse);
       return;
     }
@@ -193,11 +171,10 @@ export async function createUser(req: AuthenticatedRequest, res: Response): Prom
   try {
     const { name, email, address, password, role } = req.body;
 
-    const existingResult = await pool.query<UserRow>(
-      'SELECT id FROM users WHERE email = $1',
-      [email.trim().toLowerCase()]
-    );
-    if (existingResult.rows.length > 0) {
+    const existingResult = await db.collection('users')
+      .where('email', '==', email.trim().toLowerCase())
+      .get();
+    if (!existingResult.empty) {
       res.status(409).json({ success: false, message: 'Email already registered' } as ApiResponse);
       return;
     }
@@ -215,7 +192,7 @@ export async function getAllRatings(req: AuthenticatedRequest, res: Response): P
     const filters = {
       customerName: typeof req.query.customerName === 'string' ? req.query.customerName : undefined,
       storeName: typeof req.query.storeName === 'string' ? req.query.storeName : undefined,
-      rating: typeof req.query.rating === 'string' ? parseInt(req.query.rating, 10) : undefined,
+      rating: req.query.rating ? parseInt(req.query.rating as string, 10) : undefined,
     };
     const sortBy = typeof req.query.sortBy === 'string' ? req.query.sortBy : 'created_at';
     const order = req.query.order === 'DESC' ? 'DESC' : 'ASC';
@@ -230,18 +207,12 @@ export async function getAllRatings(req: AuthenticatedRequest, res: Response): P
 
 export async function getRatingById(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) {
-      res.status(400).json({ success: false, message: 'Invalid rating ID' } as ApiResponse);
-      return;
-    }
-
+    const id = req.params.id;
     const rating = await adminService.getRatingById(id);
     if (!rating) {
       res.status(404).json({ success: false, message: 'Rating not found' } as ApiResponse);
       return;
     }
-
     res.json({ success: true, data: rating } as ApiResponse);
   } catch (error) {
     console.error('Get rating details error:', error);
@@ -253,11 +224,9 @@ export async function createRating(req: AuthenticatedRequest, res: Response): Pr
   try {
     const { userId, storeId, rating } = req.body;
 
-    const existingResult = await pool.query(
-      'SELECT id FROM ratings WHERE user_id = $1 AND store_id = $2',
-      [userId, storeId]
-    );
-    if (existingResult.rows.length > 0) {
+    const ratingDocId = `${userId}_${storeId}`;
+    const existingDoc = await db.collection('ratings').doc(ratingDocId).get();
+    if (existingDoc.exists) {
       res.status(409).json({ success: false, message: 'User has already rated this store' } as ApiResponse);
       return;
     }
@@ -272,12 +241,7 @@ export async function createRating(req: AuthenticatedRequest, res: Response): Pr
 
 export async function updateRating(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) {
-      res.status(400).json({ success: false, message: 'Invalid rating ID' } as ApiResponse);
-      return;
-    }
-
+    const id = req.params.id;
     const existingRating = await adminService.getRatingById(id);
     if (!existingRating) {
       res.status(404).json({ success: false, message: 'Rating not found' } as ApiResponse);
@@ -294,12 +258,7 @@ export async function updateRating(req: AuthenticatedRequest, res: Response): Pr
 
 export async function deleteRating(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) {
-      res.status(400).json({ success: false, message: 'Invalid rating ID' } as ApiResponse);
-      return;
-    }
-
+    const id = req.params.id;
     const existingRating = await adminService.getRatingById(id);
     if (!existingRating) {
       res.status(404).json({ success: false, message: 'Rating not found' } as ApiResponse);

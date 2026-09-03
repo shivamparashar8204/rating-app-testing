@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { UserRole } from '../types';
 
 declare global {
   interface Window {
@@ -19,13 +20,32 @@ declare global {
 }
 
 export function LoginPage() {
-  const { login, googleLogin } = useAuth();
+  const { login, googleLogin, user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<UserRole | ''>('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const googleButtonRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      switch (user.role) {
+        case 'ADMIN':
+          navigate('/admin');
+          break;
+        case 'STORE_OWNER':
+          navigate('/store-owner');
+          break;
+        case 'CUSTOMER':
+          navigate('/customer');
+          break;
+        default:
+          navigate('/');
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
 
   useEffect(() => {
     const loadGoogleScript = () => {
@@ -69,25 +89,6 @@ export function LoginPage() {
 
     try {
       await googleLogin(response.credential);
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        const user = JSON.parse(storedUser);
-        switch (user.role) {
-          case 'ADMIN':
-            navigate('/admin');
-            break;
-          case 'STORE_OWNER':
-            navigate('/store-owner');
-            break;
-          case 'CUSTOMER':
-            navigate('/customer');
-            break;
-          default:
-            navigate('/');
-        }
-      } else {
-        navigate('/');
-      }
     } catch (err: unknown) {
       const apiError = err as { response?: { data?: { message?: string } } };
       setError(apiError.response?.data?.message || 'Google login failed. Please try again.');
@@ -99,29 +100,16 @@ export function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!role) {
+      setError('Please select an account type');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      await login({ email, password });
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        const user = JSON.parse(storedUser);
-        switch (user.role) {
-          case 'ADMIN':
-            navigate('/admin');
-            break;
-          case 'STORE_OWNER':
-            navigate('/store-owner');
-            break;
-          case 'CUSTOMER':
-            navigate('/customer');
-            break;
-          default:
-            navigate('/');
-        }
-      } else {
-        navigate('/');
-      }
+      await login({ email, password, role: role as UserRole });
     } catch (err: unknown) {
       const apiError = err as { response?: { data?: { message?: string } } };
       setError(apiError.response?.data?.message || 'Login failed. Please try again.');
@@ -148,6 +136,22 @@ export function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
+          <div className="form-group">
+            <label htmlFor="role">Account Type</label>
+            <select
+              id="role"
+              value={role}
+              onChange={(e) => setRole(e.target.value as UserRole | '')}
+              className="role-select"
+              required
+            >
+              <option value="">Select account type</option>
+              <option value="CUSTOMER">Customer</option>
+              <option value="STORE_OWNER">Store Owner</option>
+              <option value="ADMIN">System Administrator</option>
+            </select>
+          </div>
+
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input

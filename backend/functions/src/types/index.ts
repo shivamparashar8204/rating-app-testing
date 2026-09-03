@@ -1,20 +1,4 @@
-import { Request } from 'express';
-
 export type UserRole = 'ADMIN' | 'CUSTOMER' | 'STORE_OWNER';
-
-export interface JwtPayload {
-  userId: number;
-  role: UserRole;
-}
-
-export interface AuthenticatedUser {
-  userId: number;
-  role: UserRole;
-}
-
-export interface AuthenticatedRequest extends Request {
-  user?: AuthenticatedUser;
-}
 
 export interface ApiResponse<T = unknown> {
   success: boolean;
@@ -42,12 +26,18 @@ export interface ChangePasswordBody {
   newPassword: string;
 }
 
-export interface GoogleAuthBody {
-  credential: string;
+export interface SafeUser {
+  id: string;
+  name: string;
+  email: string;
+  address: string | null;
+  role: UserRole;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface UserRow {
-  id: number;
+  id: string;
   name: string;
   email: string;
   address: string | null;
@@ -59,30 +49,20 @@ export interface UserRow {
 }
 
 export interface StoreRow {
-  id: number;
+  id: string;
   name: string;
   email: string;
   address: string;
-  store_owner_id: number;
+  store_owner_id: string;
   created_at: Date;
   updated_at: Date;
 }
 
 export interface RatingRow {
-  id: number;
-  user_id: number;
-  store_id: number;
+  id: string;
+  user_id: string;
+  store_id: string;
   rating: number;
-  created_at: Date;
-  updated_at: Date;
-}
-
-export interface SafeUser {
-  id: number;
-  name: string;
-  email: string;
-  address: string | null;
-  role: UserRole;
   created_at: Date;
   updated_at: Date;
 }
@@ -107,7 +87,7 @@ export interface AdminCreateStoreBody {
   name: string;
   email: string;
   address: string;
-  storeOwnerId: number;
+  storeOwnerId: string;
 }
 
 export interface AdminUpdateStoreBody {
@@ -117,8 +97,8 @@ export interface AdminUpdateStoreBody {
 }
 
 export interface AdminCreateRatingBody {
-  userId: number;
-  storeId: number;
+  userId: string;
+  storeId: string;
   rating: number;
 }
 
@@ -127,12 +107,12 @@ export interface AdminUpdateRatingBody {
 }
 
 export interface AdminRatingDetail {
-  id: number;
+  id: string;
   rating: number;
-  user_id: number;
+  user_id: string;
   user_name: string;
   user_email: string;
-  store_id: number;
+  store_id: string;
   store_name: string;
   store_email: string;
   created_at: Date;
@@ -140,7 +120,7 @@ export interface AdminRatingDetail {
 }
 
 export interface CustomerRatingBody {
-  storeId: number;
+  storeId: string;
   rating: number;
 }
 
@@ -155,28 +135,28 @@ export interface DashboardCounts {
 }
 
 export interface StoreWithAvgRating {
-  id: number;
+  id: string;
   name: string;
   email: string;
   address: string;
-  store_owner_id: number;
+  store_owner_id: string;
   avg_rating: number | null;
 }
 
 export interface StoreWithUserRating {
-  id: number;
+  id: string;
   name: string;
   email: string;
   address: string;
-  store_owner_id: number;
+  store_owner_id: string;
   avg_rating: number | null;
   user_rating: number | null;
 }
 
 export interface RatingWithUser {
-  id: number;
+  id: string;
   rating: number;
-  user_id: number;
+  user_id: string;
   user_name: string;
   user_email: string;
   created_at: Date;
@@ -184,7 +164,7 @@ export interface RatingWithUser {
 }
 
 export interface AdminUserDetail {
-  id: number;
+  id: string;
   name: string;
   email: string;
   address: string | null;
@@ -193,11 +173,11 @@ export interface AdminUserDetail {
 }
 
 export interface AdminStoreDetail {
-  id: number;
+  id: string;
   name: string;
   email: string;
   address: string;
-  store_owner_id: number;
+  store_owner_id: string;
   owner_name: string;
   owner_email: string;
   avg_rating: number | null;
@@ -205,12 +185,12 @@ export interface AdminStoreDetail {
 }
 
 export interface StoreOwnerProfile {
-  id: number;
+  id: string;
   name: string;
   email: string;
   address: string | null;
   role: UserRole;
-  store_id: number;
+  store_id: string;
   store_name: string;
   store_email: string;
   store_address: string;

@@ -18,7 +18,7 @@ export function AdminStores() {
     name: '',
     email: '',
     address: '',
-    storeOwnerId: 0,
+    storeOwnerId: '',
   });
   const [editFormData, setEditFormData] = useState({
     name: '',
@@ -124,7 +124,7 @@ export function AdminStores() {
       });
       showToast('Store created successfully', 'success');
       setShowCreateModal(false);
-      setFormData({ name: '', email: '', address: '', storeOwnerId: 0 });
+      setFormData({ name: '', email: '', address: '', storeOwnerId: '' });
       loadStores();
     } catch (err: unknown) {
       const apiError = err as { response?: { data?: { message?: string } } };
@@ -182,7 +182,7 @@ export function AdminStores() {
     setShowEditModal(true);
   };
 
-  const getOwnerName = (ownerId: number) => {
+  const getOwnerName = (ownerId: string) => {
     const owner = storeOwners.find(o => o.id === ownerId);
     return owner ? owner.name : 'Unknown';
   };
@@ -312,9 +312,9 @@ export function AdminStores() {
                 <label>Store Owner</label>
                 <select
                   value={formData.storeOwnerId}
-                  onChange={(e) => setFormData({ ...formData, storeOwnerId: Number(e.target.value) })}
+                  onChange={(e) => setFormData({ ...formData, storeOwnerId: e.target.value })}
                 >
-                  <option value={0}>Select a store owner</option>
+                  <option value="">Select a store owner</option>
                   {storeOwners.map((owner) => (
                     <option key={owner.id} value={owner.id}>
                       {owner.name} ({owner.email})

@@ -52,6 +52,7 @@ export function AdminReviews() {
       const data = await adminApi.getRatings(params as Record<string, string>);
       setRatings(data);
     } catch (error) {
+      console.error('Failed to load reviews:', error);
       showToast('Failed to load reviews', 'error');
     } finally {
       setIsLoading(false);

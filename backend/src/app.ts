@@ -8,7 +8,14 @@ import adminRoutes from './routes/admin';
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim());
+
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' ? allowedOrigins : true,
+  credentials: true,
+}));
 app.use(express.json());
 
 app.get('/health', async (_req, res) => {
@@ -28,6 +35,14 @@ app.get('/health', async (_req, res) => {
       error: message,
     });
   }
+});
+
+app.get('/', (_req, res) => {
+  res.json({
+    name: 'Rating App API',
+    message: 'This is the backend API. The frontend runs separately.',
+    endpoints: ['/api', '/api/auth', '/api/customer', '/api/store-owner', '/api/admin', '/health'],
+  });
 });
 
 app.get('/api', (_req, res) => {

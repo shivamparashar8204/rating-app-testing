@@ -63,9 +63,10 @@ export function LoginPage() {
     };
 
     const initializeGoogle = () => {
-      if (window.google?.accounts?.id) {
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      if (window.google?.accounts?.id && clientId) {
         window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
+          client_id: clientId,
           callback: handleGoogleResponse,
         });
 

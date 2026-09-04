@@ -36,28 +36,6 @@ export async function login(req: AuthenticatedRequest, res: Response): Promise<v
     const { email, password, role }: LoginBody = req.body;
     const selectedRole = role.toUpperCase() as 'ADMIN' | 'CUSTOMER' | 'STORE_OWNER';
 
-    // DEVELOPMENT ONLY: hardcoded admin credentials for local testing
-    if (process.env.NODE_ENV !== 'production' && email === 'admin' && password === 'admin' && selectedRole === 'ADMIN') {
-      const token = generateToken(0, 'ADMIN');
-      const now = new Date();
-      const safeUser: SafeUser = {
-        id: 0,
-        name: 'System Administrator',
-        email: 'admin',
-        address: '',
-        role: 'ADMIN',
-        created_at: now,
-        updated_at: now,
-      };
-
-      res.json({
-        success: true,
-        message: 'Login successful',
-        data: { token, user: safeUser },
-      } as ApiResponse);
-      return;
-    }
-
     const user = await authService.findUserByEmail(email);
     if (!user || !user.password_hash) {
       res.status(401).json({ success: false, message: 'Invalid email or password' } as ApiResponse);
@@ -93,6 +71,36 @@ export async function login(req: AuthenticatedRequest, res: Response): Promise<v
     } as ApiResponse);
   } catch (error) {
     console.error('Login error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' } as ApiResponse);
+  }
+}
+
+export async function getMe(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, message: 'Authentication required' } as ApiResponse);
+      return;
+    }
+
+    const user = await authService.findUserById(req.user.userId);
+    if (!user) {
+      res.status(404).json({ success: false, message: 'User not found' } as ApiResponse);
+      return;
+    }
+
+    const safeUser: SafeUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      address: user.address,
+      role: user.role,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+    };
+
+    res.json({ success: true, data: safeUser } as ApiResponse);
+  } catch (error) {
+    console.error('Get me error:', error);
     res.status(500).json({ success: false, message: 'Internal server error' } as ApiResponse);
   }
 }

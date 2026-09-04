@@ -19,26 +19,26 @@ async function seed() {
     }
 
     console.log('Seeding users...');
-    const adminHash = await bcrypt.hash('admin', SALT_ROUNDS);
-    const customerHash = await bcrypt.hash('customer', SALT_ROUNDS);
-    const storeOwnerHash = await bcrypt.hash('storeowner', SALT_ROUNDS);
+    const adminHash = await bcrypt.hash('Admin@123', SALT_ROUNDS);
+    const customerHash = await bcrypt.hash('Customer@123', SALT_ROUNDS);
+    const storeOwnerHash = await bcrypt.hash('StoreOwner@123', SALT_ROUNDS);
 
     await pool.query(
       `INSERT INTO users (name, email, address, password_hash, role) VALUES ($1, $2, $3, $4, $5)`,
-      ['System Administrator Account', 'admin', '123 Admin Street', adminHash, 'ADMIN']
+      ['System Administrator Account', 'admin@test.com', '123 Admin Street', adminHash, 'ADMIN']
     );
     await pool.query(
       `INSERT INTO users (name, email, address, password_hash, role) VALUES ($1, $2, $3, $4, $5)`,
-      ['Regular Customer Account', 'customer', '456 Customer Avenue', customerHash, 'CUSTOMER']
+      ['Regular Customer Account', 'customer@test.com', '456 Customer Avenue', customerHash, 'CUSTOMER']
     );
     await pool.query(
       `INSERT INTO users (name, email, address, password_hash, role) VALUES ($1, $2, $3, $4, $5)`,
-      ['Store Owner Test Account', 'storeowner', '789 Store Boulevard', storeOwnerHash, 'STORE_OWNER']
+      ['Store Owner Test Account', 'owner@test.com', '789 Store Boulevard', storeOwnerHash, 'STORE_OWNER']
     );
 
     const storeOwnerResult = await pool.query(
       'SELECT id FROM users WHERE email = $1',
-      ['storeowner']
+      ['owner@test.com']
     );
     const storeOwnerId = storeOwnerResult.rows[0].id;
 
@@ -50,7 +50,7 @@ async function seed() {
 
     const customerResult = await pool.query(
       'SELECT id FROM users WHERE email = $1',
-      ['customer']
+      ['customer@test.com']
     );
     const customerId = customerResult.rows[0].id;
 
@@ -66,9 +66,9 @@ async function seed() {
     console.log('Seed complete.');
     console.log('');
     console.log('Test accounts:');
-    console.log('  Admin:      email=admin      password=admin');
-    console.log('  Customer:   email=customer   password=customer');
-    console.log('  StoreOwner: email=storeowner password=storeowner');
+    console.log('  Admin:      email=admin@test.com      password=Admin@123');
+    console.log('  Customer:   email=customer@test.com   password=Customer@123');
+    console.log('  StoreOwner: email=owner@test.com      password=StoreOwner@123');
   } catch (error) {
     console.error('Seed failed:', error);
     process.exit(1);

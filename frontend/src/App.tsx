@@ -9,6 +9,10 @@ import { AdminCustomers } from './pages/AdminCustomers';
 import { AdminStoreOwners } from './pages/AdminStoreOwners';
 import { AdminStores } from './pages/AdminStores';
 import { AdminReviews } from './pages/AdminReviews';
+import { AdminUsers } from './pages/AdminUsers';
+import { AdminUserDetail } from './pages/AdminUserDetail';
+import { CustomerDashboard } from './pages/CustomerDashboard';
+import { StoreOwnerDashboard } from './pages/StoreOwnerDashboard';
 
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -82,6 +86,8 @@ function AppRoutes() {
         <Route path="customers/:id" element={<AdminCustomers />} />
         <Route path="store-owners" element={<AdminStoreOwners />} />
         <Route path="store-owners/:id" element={<AdminStoreOwners />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="users/:id" element={<AdminUserDetail />} />
         <Route path="stores" element={<AdminStores />} />
         <Route path="stores/:id" element={<AdminStores />} />
         <Route path="reviews" element={<AdminReviews />} />
@@ -91,10 +97,7 @@ function AppRoutes() {
         path="/store-owner"
         element={
           <ProtectedRoute allowedRoles={['STORE_OWNER']}>
-            <div className="dashboard-placeholder">
-              <h1>Store Owner Dashboard</h1>
-              <p>Coming soon...</p>
-            </div>
+            <StoreOwnerDashboard />
           </ProtectedRoute>
         }
       />
@@ -102,10 +105,7 @@ function AppRoutes() {
         path="/customer"
         element={
           <ProtectedRoute allowedRoles={['CUSTOMER']}>
-            <div className="dashboard-placeholder">
-              <h1>Customer Dashboard</h1>
-              <p>Coming soon...</p>
-            </div>
+            <CustomerDashboard />
           </ProtectedRoute>
         }
       />

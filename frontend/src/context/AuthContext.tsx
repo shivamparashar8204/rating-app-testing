@@ -1,102 +1,120 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  User as FirebaseUser,
-  GoogleAuthProvider,
-  signInWithCredential,
-} from 'firebase/auth';
-import { auth } from '../lib/firebase';
-import api from '../services/api';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import api, { setToken, getToken } from '../services/api';
 import { User, UserRole } from '../types';
 
 interface AuthContextType {
   user: User | null;
-  firebaseUser: FirebaseUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (credentials: { email: string; password: string; role: UserRole }) => Promise<void>;
   signup: (data: { name: string; email: string; address: string; password: string; role: UserRole }) => Promise<void>;
   googleLogin: (credential: string) => Promise<void>;
   logout: () => void;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const fetchInProgressRef = useRef(false);
+const USER_KEY = 'rating_app_user';
 
-  const fetchUserProfile = useCallback(async () => {
-    if (fetchInProgressRef.current) return;
-    fetchInProgressRef.current = true;
-    try {
-      const response = await api.get<{ success: boolean; data: User }>('/auth/me');
-      if (response.data.success) {
-        setUser(response.data.data);
-      }
-    } catch {
-      setUser(null);
-    } finally {
-      fetchInProgressRef.current = false;
+function readStoredUser(): User | null {
+  try {
+    const raw = localStorage.getItem(USER_KEY);
+    return raw ? (JSON.parse(raw) as User) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(() => readStoredUser());
+  const [isLoading, setIsLoading] = useState(true);
+
+  const persistUser = useCallback((nextUser: User | null) => {
+    setUser(nextUser);
+    if (nextUser) {
+      localStorage.setItem(USER_KEY, JSON.stringify(nextUser));
+    } else {
+      localStorage.removeItem(USER_KEY);
     }
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const response = await api.get<{ success: boolean; data: User }>('/auth/me');
+      if (response.data.success) {
+        persistUser(response.data.data);
+      }
+    } catch {
+      setToken(null);
+      localStorage.removeItem(USER_KEY);
+      setUser(null);
+    }
+  }, [persistUser]);
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-      if (fbUser) {
-        setFirebaseUser(fbUser);
-        await fetchUserProfile();
+    const restoreSession = async () => {
+      if (getToken()) {
+        await refreshUser();
       } else {
-        setFirebaseUser(null);
         setUser(null);
       }
       setIsLoading(false);
-    });
+    };
+    restoreSession();
+  }, [refreshUser]);
 
-    return () => unsubscribe();
-  }, [fetchUserProfile]);
+  const login = useCallback(async (credentials: { email: string; password: string; role: UserRole }) => {
+    const response = await api.post<{
+      success: boolean;
+      data: { token: string; user: User };
+    }>('/auth/login', credentials);
+    const { token, user: loggedInUser } = response.data.data;
+    setToken(token);
+    persistUser(loggedInUser);
+  }, [persistUser]);
 
-  const login = async (credentials: { email: string; password: string; role: UserRole }) => {
-    await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
-  };
+  const signup = useCallback(async (data: { name: string; email: string; address: string; password: string; role: UserRole }) => {
+    const response = await api.post<{
+      success: boolean;
+      data: { token: string; user: User };
+    }>('/auth/signup', data);
+    const { token, user: newUser } = response.data.data;
+    setToken(token);
+    persistUser(newUser);
+  }, [persistUser]);
 
-  const signup = async (data: { name: string; email: string; address: string; password: string; role: UserRole }) => {
-    const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+  const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
+    await api.put('/auth/change-password', { currentPassword, newPassword });
+  }, []);
 
-    await api.post('/auth/complete-signup', {
-      name: data.name,
-      address: data.address,
-      role: data.role,
-    });
-  };
+  const googleLogin = useCallback(async (credential: string) => {
+    const response = await api.post<{
+      success: boolean;
+      data: { token: string; user: User };
+    }>('/auth/google', { credential });
+    const { token, user: googleUser } = response.data.data;
+    setToken(token);
+    persistUser(googleUser);
+  }, [persistUser]);
 
-  const googleLogin = async (credential: string) => {
-    const googleCredential = GoogleAuthProvider.credential(credential);
-    await signInWithCredential(auth, googleCredential);
-  };
-
-  const logout = async () => {
-    await signOut(auth);
-    setFirebaseUser(null);
+  const logout = useCallback(() => {
+    setToken(null);
+    localStorage.removeItem(USER_KEY);
     setUser(null);
-  };
+  }, []);
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        firebaseUser,
-        isAuthenticated: !!firebaseUser && !!user,
+        isAuthenticated: !!user,
         isLoading,
         login,
         signup,
         googleLogin,
         logout,
+        changePassword,
       }}
     >
       {children}

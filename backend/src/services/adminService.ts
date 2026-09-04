@@ -1,5 +1,5 @@
 import pool from '../config/database';
-import { DashboardCounts, UserRow, AdminUserDetail, AdminStoreDetail, StoreRow, AdminRatingDetail, RatingRow } from '../types';
+import { DashboardCounts, UserRow, AdminUserDetail, AdminStoreDetail, StoreRow, AdminRatingDetail, RatingRow, UserRole } from '../types';
 import bcrypt from 'bcryptjs';
 
 const SALT_ROUNDS = 10;
@@ -56,7 +56,12 @@ export async function getAllUsers(
 }
 
 export async function getUserById(id: number): Promise<{
-  user: AdminUserDetail;
+  id: number;
+  name: string;
+  email: string;
+  address: string | null;
+  role: UserRole;
+  created_at: Date;
   store?: StoreRow;
   avg_rating?: number | null;
   total_ratings?: number;
@@ -81,7 +86,7 @@ export async function getUserById(id: number): Promise<{
       );
       const ratingData = ratingResult.rows[0];
       return {
-        user,
+        ...user,
         store,
         avg_rating: ratingData.avg_rating ? Math.round(parseFloat(ratingData.avg_rating) * 10) / 10 : null,
         total_ratings: parseInt(ratingData.total_ratings, 10),
@@ -89,7 +94,7 @@ export async function getUserById(id: number): Promise<{
     }
   }
 
-  return { user };
+  return { ...user };
 }
 
 export async function getAllStores(

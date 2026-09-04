@@ -48,6 +48,7 @@ export function AdminStoreOwners() {
       const data = await adminApi.getUsers(params);
       setStoreOwners(data);
     } catch (error) {
+      console.error('Failed to load store owners:', error);
       showToast('Failed to load store owners', 'error');
     } finally {
       setIsLoading(false);

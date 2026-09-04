@@ -5,10 +5,10 @@ interface StarRatingProps {
 }
 
 export function StarRating({ rating, size = 'md', showNumber = true }: StarRatingProps) {
-  const sizeClasses = {
-    sm: 'text-sm',
-    md: 'text-base',
-    lg: 'text-xl',
+  const sizeStyles: Record<string, React.CSSProperties> = {
+    sm: { fontSize: '0.875rem' },
+    md: { fontSize: '1rem' },
+    lg: { fontSize: '1.25rem' },
   };
 
   const fullStars = Math.floor(rating);
@@ -17,7 +17,7 @@ export function StarRating({ rating, size = 'md', showNumber = true }: StarRatin
 
   return (
     <div className="star-rating-inline">
-      <span className={`stars ${sizeClasses[size]}`}>
+      <span className="stars" style={sizeStyles[size]}>
         {'★'.repeat(fullStars)}
         {hasHalfStar && '½'}
         {'☆'.repeat(emptyStars)}

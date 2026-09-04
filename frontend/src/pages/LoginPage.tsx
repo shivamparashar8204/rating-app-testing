@@ -26,8 +26,10 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole | ''>('');
   const [error, setError] = useState('');
+  const [googleError, setGoogleError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const googleButtonRef = useRef<HTMLDivElement>(null);
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -48,25 +50,15 @@ export function LoginPage() {
   }, [isAuthenticated, user, navigate]);
 
   useEffect(() => {
-    const loadGoogleScript = () => {
-      if (document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
-        initializeGoogle();
+    const initializeGoogle = () => {
+      if (!googleClientId) {
+        console.error('[auth] VITE_GOOGLE_CLIENT_ID is not set. Configure it in Vercel and redeploy to enable Google sign-in.');
+        setGoogleError('Google sign-in is not configured. Please use email and password instead.');
         return;
       }
-
-      const script = document.createElement('script');
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      script.onload = initializeGoogle;
-      document.head.appendChild(script);
-    };
-
-    const initializeGoogle = () => {
-      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-      if (window.google?.accounts?.id && clientId) {
+      if (window.google?.accounts?.id) {
         window.google.accounts.id.initialize({
-          client_id: clientId,
+          client_id: googleClientId,
           callback: handleGoogleResponse,
         });
 
@@ -81,8 +73,23 @@ export function LoginPage() {
       }
     };
 
-    loadGoogleScript();
-  }, []);
+    const handleScriptError = () => {
+      console.error('[auth] Google Identity Services script failed to load.');
+      setGoogleError('Google sign-in is temporarily unavailable. Please use email and password instead.');
+    };
+
+    if (document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
+      initializeGoogle();
+    } else {
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = initializeGoogle;
+      script.onerror = handleScriptError;
+      document.head.appendChild(script);
+    }
+  }, [googleClientId]);
 
   const handleGoogleResponse = async (response: { credential: string }) => {
     setError('');
@@ -129,6 +136,8 @@ export function LoginPage() {
         </div>
 
         {error && <div className="auth-error">{error}</div>}
+
+        {googleError && <div className="auth-google-warning">{googleError}</div>}
 
         <div ref={googleButtonRef} className="google-button-container"></div>
 

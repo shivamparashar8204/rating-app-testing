@@ -154,9 +154,16 @@ export async function googleAuth(req: AuthenticatedRequest, res: Response): Prom
       return;
     }
 
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      console.error('GOOGLE_CLIENT_ID is not set on the server. Google sign-in is disabled.');
+      res.status(500).json({ success: false, message: 'Google sign-in is not configured on the server' } as ApiResponse);
+      return;
+    }
+
     const ticket = await googleClient.verifyIdToken({
       idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: clientId,
     });
 
     const payload = ticket.getPayload();
@@ -170,8 +177,13 @@ export async function googleAuth(req: AuthenticatedRequest, res: Response): Prom
       return;
     }
 
+    if (!payload.email) {
+      res.status(401).json({ success: false, message: 'Google account has no email address' } as ApiResponse);
+      return;
+    }
+
     const googleId = payload.sub;
-    const email = payload.email!;
+    const email = payload.email;
     const name = payload.name || email.split('@')[0];
 
     let user = await authService.findUserByGoogleId(googleId);

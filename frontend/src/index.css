@@ -623,6 +623,17 @@ a:hover {
   justify-content: center;
 }
 
+.auth-google-warning {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
 .google-button-container iframe {
   width: 100% !important;
 }

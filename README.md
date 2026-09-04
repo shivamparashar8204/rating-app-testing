@@ -111,12 +111,25 @@ npm run dev            # starts on http://localhost:3000
    - `DATABASE_URL` (e.g. a Neon free-tier Postgres connection string)
    - `JWT_SECRET` (a long random string)
    - `NODE_ENV=production`
+   - `CORS_ORIGINS` = your deployed frontend origin(s), comma-separated,
+     e.g. `https://your-app.vercel.app,http://localhost:3000`.
+     Leave empty only if you accept allowing any origin.
 4. On first deploy, run `npm run db:init && npm run db:seed` (e.g. via a Render shell/console).
+5. Your backend URL will be `https://<service-name>.onrender.com`
+   (use `render.yaml` as-is → `https://rating-app-backend.onrender.com`). Verify it with
+   `https://<service-name>.onrender.com/health`.
 
 ### Frontend (Vercel)
-1. Import the `frontend/` directory as a Vercel project.
-2. Set the environment variable `VITE_API_URL` to your Render backend URL (e.g. `https://<service>.onrender.com`).
-3. Deploy. The bundled `vercel.json` rewrites all routes to `index.html` for SPA routing.
+1. Import the `frontend/` directory as a Vercel project
+   (if you import the repo root instead, set **Root Directory** to `frontend`).
+2. Configure environment variables in **Vercel → Project → Settings → Environment Variables**
+   (this is mandatory — the local `frontend/.env` is gitignored and never reaches Vercel):
+   - `VITE_API_URL` = your Render backend API root, e.g. `https://rating-app-backend.onrender.com/api`
+     (must end in `/api`)
+   - `VITE_GOOGLE_CLIENT_ID` = your Google OAuth client ID (optional, leave unset to hide the button)
+3. Trigger a redeploy (**Project → Deployments → Redeploy**). The bundled `vercel.json` rewrites
+   all frontend routes (`/`, `/login`, `/signup`, `/admin`, `/admin/*`, `/customer`,
+   `/store-owner`) to `index.html` so direct navigation works.
 
 ### Database
 - Use any free PostgreSQL provider (e.g. Neon, Supabase, ElephantSQL). Point `DATABASE_URL` at it.

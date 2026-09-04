@@ -8,13 +8,17 @@ import adminRoutes from './routes/admin';
 
 const app = express();
 
-const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:5173')
+// Comma-separated allowlist of frontend origins (CORS), e.g.
+//   CORS_ORIGINS=https://your-app.vercel.app,http://localhost:3000
+// When unset, any origin is allowed (reflects the caller). Set it in
+// production to restrict access to your deployed frontend(s).
+const allowedOrigins = (process.env.CORS_ORIGINS || '')
   .split(',')
-  .map((origin) => origin.trim());
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? allowedOrigins : true,
-  credentials: true,
+  origin: allowedOrigins.length > 0 ? allowedOrigins : true,
 }));
 app.use(express.json());
 

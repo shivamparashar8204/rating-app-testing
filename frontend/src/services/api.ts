@@ -2,7 +2,11 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 if (!API_BASE_URL) {
-  console.error('VITE_API_URL environment variable is not set');
+  console.error(
+    '[api] VITE_API_URL is not set. The build was made WITHOUT a backend URL, so all API calls ' +
+      'will fail. Configure it in Vercel (Project -> Settings -> Environment Variables -> ' +
+      'VITE_API_URL = https://<your-render-backend>.onrender.com/api) and redeploy.',
+  );
 }
 
 const TOKEN_KEY = 'rating_app_token';

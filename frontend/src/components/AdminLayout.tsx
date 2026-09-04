@@ -1,9 +1,24 @@
-import { NavLink, useNavigate, Outlet } from 'react-router-dom';
+import { NavLink, useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+
+const PAGE_TITLES: Record<string, string> = {
+  '/admin': 'Admin Dashboard',
+  '/admin/customers': 'Manage Customers',
+  '/admin/users': 'Manage Users',
+  '/admin/store-owners': 'Manage Store Owners',
+  '/admin/stores': 'Manage Stores',
+  '/admin/reviews': 'Manage Reviews',
+};
 
 export function AdminLayout() {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const pageTitle =
+    Object.entries(PAGE_TITLES).find(([path]) =>
+      location.pathname.startsWith(path)
+    )?.[1] || 'Admin Dashboard';
 
   const handleLogout = () => {
     logout();
@@ -25,6 +40,10 @@ export function AdminLayout() {
           <NavLink to="/admin/customers" className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
             <span className="admin-nav-icon">👤</span>
             Customers
+          </NavLink>
+          <NavLink to="/admin/users" className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
+            <span className="admin-nav-icon">🗂️</span>
+            Users
           </NavLink>
           <NavLink to="/admin/store-owners" className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
             <span className="admin-nav-icon">🏪</span>
@@ -48,7 +67,7 @@ export function AdminLayout() {
       </aside>
       <main className="admin-main">
         <header className="admin-header">
-          <h1 className="admin-page-title">Admin Dashboard</h1>
+          <h1 className="admin-page-title">{pageTitle}</h1>
         </header>
         <div className="admin-content">
           <Outlet />

@@ -9,7 +9,8 @@ export async function getAllStores(userId: number, search?: string): Promise<Sto
   let query = `
     SELECT s.id, s.name, s.email, s.address, s.store_owner_id,
            COALESCE(AVG(r.rating), 0) AS avg_rating,
-           ur.rating AS user_rating
+           ur.rating AS user_rating,
+           ur.id AS user_rating_id
     FROM stores s
     LEFT JOIN ratings r ON s.id = r.store_id
     LEFT JOIN ratings ur ON s.id = ur.store_id AND ur.user_id = $1
@@ -25,7 +26,7 @@ export async function getAllStores(userId: number, search?: string): Promise<Sto
     paramIndex += 2;
   }
 
-  query += ` GROUP BY s.id, s.name, s.email, s.address, s.store_owner_id, ur.rating`;
+  query += ` GROUP BY s.id, s.name, s.email, s.address, s.store_owner_id, ur.rating, ur.id`;
   query += ` ORDER BY s.name ASC`;
 
   const result = await pool.query(query, params);

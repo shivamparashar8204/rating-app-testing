@@ -41,11 +41,10 @@ This guide explains how to configure Google Authentication for the Rating App.
 3. Select **Web application** as the application type
 4. Enter a name (e.g., "Rating App Web Client")
 5. Under **Authorized JavaScript origins**, add:
-   - `http://localhost:5173` (for local development)
-   - `http://localhost:3000` (if using different port)
+   - `http://localhost:3000` (for local development)
    - Your production Vercel domain (e.g., `https://your-app.vercel.app`)
 6. Under **Authorized redirect URIs**, add:
-   - `http://localhost:5173`
+   - `http://localhost:3000`
    - Your production Vercel domain
 7. Click **Create**
 8. Copy the **Client ID** (you'll need this for both frontend and backend)

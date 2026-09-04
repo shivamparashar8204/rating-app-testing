@@ -9,6 +9,8 @@ export function AdminStores() {
   const [storeOwners, setStoreOwners] = useState<AdminUserDetail[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [emailFilter, setEmailFilter] = useState('');
+  const [addressFilter, setAddressFilter] = useState('');
   const [sortField, setSortField] = useState('name');
   const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('ASC');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -44,6 +46,12 @@ export function AdminStores() {
       };
       if (search) {
         params.name = search;
+      }
+      if (emailFilter) {
+        params.email = emailFilter;
+      }
+      if (addressFilter) {
+        params.address = addressFilter;
       }
       const data = await adminApi.getStores(params);
       setStores(data);
@@ -211,6 +219,22 @@ export function AdminStores() {
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           className="admin-search-input"
         />
+        <input
+          type="text"
+          placeholder="Filter by email..."
+          value={emailFilter}
+          onChange={(e) => setEmailFilter(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          className="admin-search-input"
+        />
+        <input
+          type="text"
+          placeholder="Filter by address..."
+          value={addressFilter}
+          onChange={(e) => setAddressFilter(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          className="admin-search-input"
+        />
         <button className="btn btn-secondary" onClick={handleSearch}>Search</button>
       </div>
 
@@ -229,12 +253,8 @@ export function AdminStores() {
                 <th>Email</th>
                 <th>Address</th>
                 <th>Owner</th>
-                <th onClick={() => handleSort('avg_rating')} className="sortable">
-                  Avg Rating {sortField === 'avg_rating' && (sortOrder === 'ASC' ? '↑' : '↓')}
-                </th>
-                <th onClick={() => handleSort('total_ratings')} className="sortable">
-                  Reviews {sortField === 'total_ratings' && (sortOrder === 'ASC' ? '↑' : '↓')}
-                </th>
+                <th>Avg Rating</th>
+                <th>Reviews</th>
                 <th>Actions</th>
               </tr>
             </thead>

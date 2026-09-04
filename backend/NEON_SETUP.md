@@ -61,9 +61,9 @@ This will create the following test accounts:
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | admin | admin |
-| Customer | customer | customer |
-| Store Owner | storeowner | storeowner |
+| Admin | admin@test.com | Admin@123 |
+| Customer | customer@test.com | Customer@123 |
+| Store Owner | owner@test.com | StoreOwner@123 |
 
 It will also create a sample store and rating.
 

@@ -14,6 +14,7 @@ export interface AuthResponse {
   success: boolean;
   message: string;
   data: {
+    token: string;
     user: User;
   };
 }
@@ -57,6 +58,7 @@ export interface Restaurant {
   id: string;
   name: string;
   address: string;
+  cuisine: string;
   rating: number;
   reviewCount: number;
   image: string;

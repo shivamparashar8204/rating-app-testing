@@ -8,6 +8,8 @@ export function AdminCustomers() {
   const [customers, setCustomers] = useState<AdminUserDetail[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [emailFilter, setEmailFilter] = useState('');
+  const [addressFilter, setAddressFilter] = useState('');
   const [sortField, setSortField] = useState('name');
   const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('ASC');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -45,9 +47,16 @@ export function AdminCustomers() {
       if (search) {
         params.name = search;
       }
+      if (emailFilter) {
+        params.email = emailFilter;
+      }
+      if (addressFilter) {
+        params.address = addressFilter;
+      }
       const data = await adminApi.getUsers(params);
       setCustomers(data);
     } catch (error) {
+      console.error('Failed to load customers:', error);
       showToast('Failed to load customers', 'error');
     } finally {
       setIsLoading(false);
@@ -213,6 +222,22 @@ export function AdminCustomers() {
           placeholder="Search by name..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          className="admin-search-input"
+        />
+        <input
+          type="text"
+          placeholder="Filter by email..."
+          value={emailFilter}
+          onChange={(e) => setEmailFilter(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          className="admin-search-input"
+        />
+        <input
+          type="text"
+          placeholder="Filter by address..."
+          value={addressFilter}
+          onChange={(e) => setAddressFilter(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           className="admin-search-input"
         />

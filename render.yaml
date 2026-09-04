@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: rating-app-backend
+    runtime: node
+    nodeVersion: 18
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false

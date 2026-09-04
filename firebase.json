@@ -3,7 +3,7 @@
     {
       "source": "backend/functions",
       "codebase": "default",
-      "runtime": "nodejs18",
+      "runtime": "nodejs20",
       "predeploy": [
         "npm --prefix \"$RESOURCE_DIR\" run build"
       ]

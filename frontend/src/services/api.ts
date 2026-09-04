@@ -1,9 +1,22 @@
 import axios from 'axios';
-import { auth } from '../lib/firebase';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 if (!API_BASE_URL) {
   console.error('VITE_API_URL environment variable is not set');
+}
+
+const TOKEN_KEY = 'rating_app_token';
+
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setToken(token: string | null): void {
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+  } else {
+    localStorage.removeItem(TOKEN_KEY);
+  }
 }
 
 const api = axios.create({
@@ -13,36 +26,20 @@ const api = axios.create({
   },
 });
 
-api.interceptors.request.use(async (config) => {
-  const currentUser = auth.currentUser;
-  if (currentUser) {
-    const token = await currentUser.getIdToken();
+api.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
 
-let isRetrying = false;
-
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    if (error.response?.status === 401 && !isRetrying) {
-      isRetrying = true;
-      const currentUser = auth.currentUser;
-      if (currentUser) {
-        try {
-          const newToken = await currentUser.getIdToken(true);
-          error.config.headers.Authorization = `Bearer ${newToken}`;
-          const retryResponse = await axios(error.config);
-          isRetrying = false;
-          return retryResponse;
-        } catch {
-          isRetrying = false;
-          return Promise.reject(error);
-        }
-      }
-      isRetrying = false;
+  (error) => {
+    if (error.response?.status === 401) {
+      setToken(null);
+      localStorage.removeItem('rating_app_user');
     }
     return Promise.reject(error);
   }

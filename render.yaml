@@ -4,8 +4,9 @@ services:
     runtime: node
     nodeVersion: 18
     rootDir: backend
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev && npm run build
     startCommand: npm start
+    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
@@ -16,6 +17,10 @@ services:
       - key: JWT_SECRET
         sync: false
       - key: JWT_EXPIRES_IN
+        sync: false
+      - key: CORS_ORIGINS
+        # Comma-separated list of frontend origins, e.g. https://your-app.vercel.app
+        # Leave empty to allow any origin.
         sync: false
       - key: GOOGLE_CLIENT_ID
         sync: false

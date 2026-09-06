@@ -1,12 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-<<<<<<< HEAD
-import { auth } from '../config/firebase-admin';
-import { db } from '../config/firebase-admin';
-import jwt from 'jsonwebtoken';
-=======
 import * as admin from 'firebase-admin';
 import { auth, db } from '../config/firebase-admin';
->>>>>>> 9a3339e (fix: stabilize signup and Google authentication)
 
 export type UserRole = 'ADMIN' | 'CUSTOMER' | 'STORE_OWNER';
 
@@ -18,8 +12,6 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret';
-
 export function authenticate(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;
 
@@ -28,22 +20,14 @@ export function authenticate(req: AuthenticatedRequest, res: Response, next: Nex
     return;
   }
 
-  const token = authHeader.split(' ')[1];
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { uid: string; role?: UserRole };
-    req.user = {
-      uid: decoded.uid,
-      userId: decoded.uid,
-      role: decoded.role || 'CUSTOMER',
-    };
-    next();
+  const idToken = authHeader.slice(7);
+  if (!idToken) {
+    res.status(401).json({ success: false, message: 'Access denied. No token provided.' });
     return;
-  } catch {
-    // Not a custom JWT; fall through to Firebase ID token verification.
   }
 
-  auth.verifyIdToken(token)
+  try {
+    auth.verifyIdToken(idToken)
     .then(async (decodedToken) => {
       const uid = decodedToken.uid;
 

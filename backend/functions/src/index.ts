@@ -1,6 +1,7 @@
 import * as functions from 'firebase-functions';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import authRoutes from './routes/auth';
 import storeOwnerRoutes from './routes/storeOwner';
 import customerRoutes from './routes/customer';
@@ -8,8 +9,24 @@ import adminRoutes from './routes/admin';
 
 const app = express();
 
-app.use(cors({ origin: true }));
-app.use(express.json());
+app.use(helmet());
+
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+  : ['http://localhost:3000', 'http://127.0.0.1:3000'];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, false);
+    }
+  },
+  credentials: true,
+}));
+
+app.use(express.json({ limit: '10kb' }));
 
 app.get('/health', (_req: express.Request, res: express.Response) => {
   res.json({ status: 'OK', service: 'Firebase Cloud Functions' });

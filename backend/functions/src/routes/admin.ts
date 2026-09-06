@@ -1,7 +1,14 @@
 import { Router } from 'express';
 import * as adminController from '../controllers/adminController';
 import { authenticate, authorize } from '../middleware/auth';
-import { validateAdminCreateUser, validateAdminCreateStore } from '../middleware/validate';
+import {
+  validateAdminCreateUser,
+  validateAdminCreateStore,
+  validateAdminCreateRating,
+  validateAdminUpdateRating,
+  validateAdminUpdateUser,
+  validateAdminUpdateStore,
+} from '../middleware/validate';
 
 const router = Router();
 
@@ -17,20 +24,20 @@ router.get('/dashboard/recent-stores', adminController.getRecentlyAddedStores);
 router.get('/customers', adminController.getCustomers);
 router.get('/users', adminController.getAllUsers);
 router.get('/users/:id', adminController.getUserById);
-router.put('/users/:id', adminController.updateUser);
+router.put('/users/:id', validateAdminUpdateUser, adminController.updateUser);
 router.post('/users', validateAdminCreateUser, adminController.createUser);
 
 router.get('/store-owners', adminController.getStoreOwners);
 
 router.get('/stores', adminController.getAllStores);
 router.get('/stores/:id', adminController.getStoreById);
-router.put('/stores/:id', adminController.updateStore);
+router.put('/stores/:id', validateAdminUpdateStore, adminController.updateStore);
 router.post('/stores', validateAdminCreateStore, adminController.createStore);
 
 router.get('/ratings', adminController.getAllRatings);
 router.get('/ratings/:id', adminController.getRatingById);
-router.post('/ratings', adminController.createRating);
-router.put('/ratings/:id', adminController.updateRating);
+router.post('/ratings', validateAdminCreateRating, adminController.createRating);
+router.put('/ratings/:id', validateAdminUpdateRating, adminController.updateRating);
 router.delete('/ratings/:id', adminController.deleteRating);
 
 export default router;

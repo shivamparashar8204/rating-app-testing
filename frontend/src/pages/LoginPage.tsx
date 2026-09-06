@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
+import { DEMO_CUSTOMER, DEMO_STORE_OWNER, DEMO_ADMIN } from '../config/demo';
 
 declare global {
   interface Window {
@@ -161,6 +162,78 @@ export function LoginPage() {
               <option value="ADMIN">System Administrator</option>
             </select>
           </div>
+
+          {role === 'CUSTOMER' && (
+            <div className="demo-section">
+              <div className="demo-badge">Testing Mode</div>
+              <p className="demo-info">
+                Don't have an account? Use the demo customer to explore.
+              </p>
+              <button
+                type="button"
+                className="btn btn-outline btn-full demo-btn"
+                onClick={() => {
+                  setEmail(DEMO_CUSTOMER.email);
+                  setPassword(DEMO_CUSTOMER.password);
+                }}
+              >
+                Use Demo Customer
+              </button>
+              <div className="demo-credentials">
+                <span className="demo-cred-label">Demo Customer</span>
+                <span className="demo-cred-value">{DEMO_CUSTOMER.email}</span>
+                <span className="demo-cred-value">{'•'.repeat(DEMO_CUSTOMER.password.length)}</span>
+              </div>
+            </div>
+          )}
+
+          {role === 'STORE_OWNER' && (
+            <div className="demo-section">
+              <div className="demo-badge">Testing Mode</div>
+              <p className="demo-info">
+                Use the demo store owner to explore the store-owner dashboard.
+              </p>
+              <button
+                type="button"
+                className="btn btn-outline btn-full demo-btn"
+                onClick={() => {
+                  setEmail(DEMO_STORE_OWNER.email);
+                  setPassword(DEMO_STORE_OWNER.password);
+                }}
+              >
+                Use Demo Store Owner
+              </button>
+              <div className="demo-credentials">
+                <span className="demo-cred-label">Demo Store Owner</span>
+                <span className="demo-cred-value">{DEMO_STORE_OWNER.email}</span>
+                <span className="demo-cred-value">{'•'.repeat(DEMO_STORE_OWNER.password.length)}</span>
+              </div>
+            </div>
+          )}
+
+          {role === 'ADMIN' && (
+            <div className="demo-section">
+              <div className="demo-badge">Testing Mode</div>
+              <p className="demo-info">
+                Use the demo admin to explore the admin dashboard.
+              </p>
+              <button
+                type="button"
+                className="btn btn-outline btn-full demo-btn"
+                onClick={() => {
+                  setEmail(DEMO_ADMIN.email);
+                  setPassword(DEMO_ADMIN.password);
+                }}
+              >
+                Use Demo Admin
+              </button>
+              <div className="demo-credentials">
+                <span className="demo-cred-label">Demo Admin</span>
+                <span className="demo-cred-value">{DEMO_ADMIN.email}</span>
+                <span className="demo-cred-value">{'•'.repeat(DEMO_ADMIN.password.length)}</span>
+              </div>
+            </div>
+          )}
 
           <div className="form-group">
             <label htmlFor="email">Email</label>

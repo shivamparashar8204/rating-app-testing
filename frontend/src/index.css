@@ -659,6 +659,60 @@ a:hover {
   font-weight: 500;
 }
 
+/* Demo Customer Section */
+.demo-section {
+  background: var(--cream);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.demo-badge {
+  display: inline-block;
+  background: var(--navy);
+  color: var(--gold);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  width: fit-content;
+}
+
+.demo-info {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  line-height: 1.4;
+}
+
+.demo-btn {
+  font-size: 0.9rem;
+}
+
+.demo-credentials {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 8px;
+  border-top: 1px solid var(--gray-200);
+}
+
+.demo-cred-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+.demo-cred-value {
+  font-size: 0.8rem;
+  color: var(--gray-500);
+  font-family: monospace;
+}
+
 /* Protected Action */
 .protected-action-prompt {
   text-align: center;

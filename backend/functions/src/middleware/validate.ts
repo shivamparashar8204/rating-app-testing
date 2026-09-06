@@ -74,60 +74,6 @@ export function validateRating(rating: unknown): string | null {
   return null;
 }
 
-export function validateSignup(req: Request, res: Response, next: NextFunction): void {
-  const errors: ValidationErrors = {};
-  const { name, email, address, password, role } = req.body;
-
-  const nameError = validateName(name);
-  if (nameError) errors.name = nameError;
-
-  const emailError = validateEmail(email);
-  if (emailError) errors.email = emailError;
-
-  const addressError = validateAddress(address);
-  if (addressError) errors.address = addressError;
-
-  const passwordError = validatePassword(password);
-  if (passwordError) errors.password = passwordError;
-
-  const validSignupRoles = ['CUSTOMER', 'STORE_OWNER'];
-  if (!role || typeof role !== 'string' || !validSignupRoles.includes(role.toUpperCase())) {
-    errors.role = 'Role must be either CUSTOMER or STORE_OWNER';
-  }
-
-  if (Object.keys(errors).length > 0) {
-    res.status(400).json({ success: false, message: 'Validation failed', errors });
-    return;
-  }
-
-  next();
-}
-
-export function validateLogin(req: Request, res: Response, next: NextFunction): void {
-  const errors: ValidationErrors = {};
-  const { email, password, role } = req.body;
-
-  if (!email || typeof email !== 'string' || email.trim().length === 0) {
-    errors.email = 'Email is required';
-  }
-
-  if (!password || typeof password !== 'string') {
-    errors.password = 'Password is required';
-  }
-
-  const validRoles = ['ADMIN', 'CUSTOMER', 'STORE_OWNER'];
-  if (!role || typeof role !== 'string' || !validRoles.includes(role.toUpperCase())) {
-    errors.role = 'Role must be one of: ADMIN, CUSTOMER, STORE_OWNER';
-  }
-
-  if (Object.keys(errors).length > 0) {
-    res.status(400).json({ success: false, message: 'Validation failed', errors });
-    return;
-  }
-
-  next();
-}
-
 export function validateChangePassword(req: Request, res: Response, next: NextFunction): void {
   const errors: ValidationErrors = {};
   const { currentPassword, newPassword } = req.body;
@@ -226,6 +172,120 @@ export function validateCustomerUpdateRating(req: Request, res: Response, next: 
 
   const ratingError = validateRating(rating);
   if (ratingError) errors.rating = ratingError;
+
+  if (Object.keys(errors).length > 0) {
+    res.status(400).json({ success: false, message: 'Validation failed', errors });
+    return;
+  }
+
+  next();
+}
+
+export function validateAdminCreateRating(req: Request, res: Response, next: NextFunction): void {
+  const errors: ValidationErrors = {};
+  const { userId, storeId, rating } = req.body;
+
+  if (!userId || typeof userId !== 'string') {
+    errors.userId = 'User ID is required';
+  }
+
+  if (!storeId || typeof storeId !== 'string') {
+    errors.storeId = 'Store ID is required';
+  }
+
+  const ratingError = validateRating(rating);
+  if (ratingError) errors.rating = ratingError;
+
+  if (Object.keys(errors).length > 0) {
+    res.status(400).json({ success: false, message: 'Validation failed', errors });
+    return;
+  }
+
+  next();
+}
+
+export function validateAdminUpdateRating(req: Request, res: Response, next: NextFunction): void {
+  const errors: ValidationErrors = {};
+  const { rating } = req.body;
+
+  const ratingError = validateRating(rating);
+  if (ratingError) errors.rating = ratingError;
+
+  if (Object.keys(errors).length > 0) {
+    res.status(400).json({ success: false, message: 'Validation failed', errors });
+    return;
+  }
+
+  next();
+}
+
+export function validateAdminUpdateUser(req: Request, res: Response, next: NextFunction): void {
+  const errors: ValidationErrors = {};
+  const { name, email, address, role, password } = req.body;
+
+  const allowedFields = ['name', 'email', 'address', 'role', 'password'];
+  const requestedFields = Object.keys(req.body);
+  const disallowed = requestedFields.filter((f) => !allowedFields.includes(f));
+  if (disallowed.length > 0) {
+    res.status(400).json({ success: false, message: `Disallowed fields: ${disallowed.join(', ')}` });
+    return;
+  }
+
+  if (name !== undefined) {
+    const nameError = validateName(name);
+    if (nameError) errors.name = nameError;
+  }
+  if (email !== undefined) {
+    const emailError = validateEmail(email);
+    if (emailError) errors.email = emailError;
+  }
+  if (address !== undefined) {
+    const addressError = validateAddress(address);
+    if (addressError) errors.address = addressError;
+  }
+  if (role !== undefined) {
+    const validRoles = ['ADMIN', 'CUSTOMER', 'STORE_OWNER'];
+    if (typeof role !== 'string' || !validRoles.includes(role.toUpperCase())) {
+      errors.role = 'Role must be one of: ADMIN, CUSTOMER, STORE_OWNER';
+    }
+  }
+  if (password !== undefined && password !== '') {
+    const passwordError = validatePassword(password);
+    if (passwordError) errors.password = passwordError;
+  }
+
+  if (Object.keys(errors).length > 0) {
+    res.status(400).json({ success: false, message: 'Validation failed', errors });
+    return;
+  }
+
+  next();
+}
+
+export function validateAdminUpdateStore(req: Request, res: Response, next: NextFunction): void {
+  const errors: ValidationErrors = {};
+  const { name, email, address } = req.body;
+
+  const allowedFields = ['name', 'email', 'address'];
+  const requestedFields = Object.keys(req.body);
+  const disallowed = requestedFields.filter((f) => !allowedFields.includes(f));
+  if (disallowed.length > 0) {
+    res.status(400).json({ success: false, message: `Disallowed fields: ${disallowed.join(', ')}` });
+    return;
+  }
+
+  if (name !== undefined) {
+    const nameError = validateName(name);
+    if (nameError) errors.name = nameError;
+  }
+  if (email !== undefined) {
+    const emailError = validateEmail(email);
+    if (emailError) errors.email = emailError;
+  }
+  if (address !== undefined) {
+    const addressError = validateAddress(address);
+    if (addressError) errors.address = addressError;
+  }
 
   if (Object.keys(errors).length > 0) {
     res.status(400).json({ success: false, message: 'Validation failed', errors });

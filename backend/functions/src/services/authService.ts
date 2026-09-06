@@ -61,61 +61,6 @@ export async function createUserFromFirebase(
   };
 }
 
-export async function createUser(
-  name: string,
-  email: string,
-  address: string,
-  password: string,
-  role: UserRole = 'CUSTOMER'
-): Promise<SafeUser> {
-  const now = admin.firestore.FieldValue.serverTimestamp();
-
-  const existingSnapshot = await db.collection('users')
-    .where('email', '==', email.trim().toLowerCase())
-    .limit(1)
-    .get();
-
-  if (!existingSnapshot.empty) {
-    throw new Error('Email already registered');
-  }
-
-  const userRecord = await auth.createUser({
-    email: email.trim().toLowerCase(),
-    password,
-    displayName: name.trim(),
-  });
-
-  const passwordHash = await bcrypt.hash(password, 10);
-
-  await db.collection('users').doc(userRecord.uid).set({
-    name: name.trim(),
-    email: email.trim().toLowerCase(),
-    address: address.trim(),
-    password_hash: passwordHash,
-    role,
-    created_at: now,
-    updated_at: now,
-  });
-
-  return {
-    id: userRecord.uid,
-    name: name.trim(),
-    email: email.trim().toLowerCase(),
-    address: address.trim(),
-    role,
-    created_at: new Date(),
-    updated_at: new Date(),
-  };
-}
-
-export async function verifyPassword(email: string, password: string): Promise<boolean> {
-  const user = await findUserByEmail(email);
-  if (!user || !user.password_hash) {
-    return false;
-  }
-  return bcrypt.compare(password, user.password_hash);
-}
-
 export async function findUserByEmail(email: string): Promise<UserRow | null> {
   const snapshot = await db.collection('users')
     .where('email', '==', email.trim().toLowerCase())
@@ -124,6 +69,14 @@ export async function findUserByEmail(email: string): Promise<UserRow | null> {
 
   if (snapshot.empty) return null;
   return docToUserRow(snapshot.docs[0]);
+}
+
+export async function verifyPassword(email: string, password: string): Promise<boolean> {
+  const user = await findUserByEmail(email);
+  if (!user || !user.password_hash) {
+    return false;
+  }
+  return bcrypt.compare(password, user.password_hash);
 }
 
 export async function findUserById(id: string): Promise<UserRow | null> {

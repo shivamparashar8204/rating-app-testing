@@ -68,7 +68,14 @@ export async function updateUser(req: AuthenticatedRequest, res: Response): Prom
       }
     }
 
-    const user = await adminService.updateUser(id, req.body);
+    const allowedFields: Record<string, unknown> = {};
+    if (req.body.name !== undefined) allowedFields.name = req.body.name;
+    if (req.body.email !== undefined) allowedFields.email = req.body.email;
+    if (req.body.address !== undefined) allowedFields.address = req.body.address;
+    if (req.body.role !== undefined) allowedFields.role = req.body.role;
+    if (req.body.password !== undefined) allowedFields.password = req.body.password;
+
+    const user = await adminService.updateUser(id, allowedFields);
     res.json({ success: true, message: 'User updated successfully', data: user } as ApiResponse);
   } catch (error) {
     console.error('Update user error:', error);
@@ -129,7 +136,12 @@ export async function updateStore(req: AuthenticatedRequest, res: Response): Pro
       }
     }
 
-    const store = await adminService.updateStore(id, req.body);
+    const allowedFields: Record<string, unknown> = {};
+    if (req.body.name !== undefined) allowedFields.name = req.body.name;
+    if (req.body.email !== undefined) allowedFields.email = req.body.email;
+    if (req.body.address !== undefined) allowedFields.address = req.body.address;
+
+    const store = await adminService.updateStore(id, allowedFields);
     res.json({ success: true, message: 'Store updated successfully', data: store } as ApiResponse);
   } catch (error) {
     console.error('Update store error:', error);
@@ -224,6 +236,20 @@ export async function createRating(req: AuthenticatedRequest, res: Response): Pr
   try {
     const { userId, storeId, rating } = req.body;
 
+    if (!userId || typeof userId !== 'string') {
+      res.status(400).json({ success: false, message: 'User ID is required' } as ApiResponse);
+      return;
+    }
+    if (!storeId || typeof storeId !== 'string') {
+      res.status(400).json({ success: false, message: 'Store ID is required' } as ApiResponse);
+      return;
+    }
+    const numRating = Number(rating);
+    if (!Number.isInteger(numRating) || numRating < 1 || numRating > 5) {
+      res.status(400).json({ success: false, message: 'Rating must be an integer between 1 and 5' } as ApiResponse);
+      return;
+    }
+
     const ratingDocId = `${userId}_${storeId}`;
     const existingDoc = await db.collection('ratings').doc(ratingDocId).get();
     if (existingDoc.exists) {
@@ -231,7 +257,7 @@ export async function createRating(req: AuthenticatedRequest, res: Response): Pr
       return;
     }
 
-    const newRating = await adminService.createRating(userId, storeId, rating);
+    const newRating = await adminService.createRating(userId, storeId, numRating);
     res.status(201).json({ success: true, message: 'Rating created successfully', data: newRating } as ApiResponse);
   } catch (error) {
     console.error('Create rating error:', error);
@@ -248,7 +274,13 @@ export async function updateRating(req: AuthenticatedRequest, res: Response): Pr
       return;
     }
 
-    await adminService.updateRating(id, req.body.rating);
+    const numRating = Number(req.body.rating);
+    if (!Number.isInteger(numRating) || numRating < 1 || numRating > 5) {
+      res.status(400).json({ success: false, message: 'Rating must be an integer between 1 and 5' } as ApiResponse);
+      return;
+    }
+
+    await adminService.updateRating(id, numRating);
     res.json({ success: true, message: 'Rating updated successfully' } as ApiResponse);
   } catch (error) {
     console.error('Update rating error:', error);

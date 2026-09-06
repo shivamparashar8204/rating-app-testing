@@ -20,6 +20,32 @@ export async function getStores(req: AuthenticatedRequest, res: Response): Promi
   }
 }
 
+export async function getStoreById(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, message: 'Authentication required' } as ApiResponse);
+      return;
+    }
+
+    const storeId = parseInt(req.params.storeId, 10);
+    if (isNaN(storeId)) {
+      res.status(400).json({ success: false, message: 'Invalid store ID' } as ApiResponse);
+      return;
+    }
+
+    const store = await customerService.getStoreDetails(storeId, req.user.userId);
+    if (!store) {
+      res.status(404).json({ success: false, message: 'Store not found' } as ApiResponse);
+      return;
+    }
+
+    res.json({ success: true, data: store } as ApiResponse);
+  } catch (error) {
+    console.error('Get store details error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' } as ApiResponse);
+  }
+}
+
 export async function submitRating(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
     if (!req.user) {
@@ -108,6 +134,36 @@ export async function getProfile(req: AuthenticatedRequest, res: Response): Prom
     res.json({ success: true, data: safeUser } as ApiResponse);
   } catch (error) {
     console.error('Customer profile error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' } as ApiResponse);
+  }
+}
+
+export async function getRatings(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, message: 'Authentication required' } as ApiResponse);
+      return;
+    }
+
+    const ratings = await customerService.getRatingsForCustomer(req.user.userId);
+    res.json({ success: true, data: ratings } as ApiResponse);
+  } catch (error) {
+    console.error('Customer ratings error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' } as ApiResponse);
+  }
+}
+
+export async function getDashboard(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, message: 'Authentication required' } as ApiResponse);
+      return;
+    }
+
+    const data = await customerService.getCustomerDashboard(req.user.userId);
+    res.json({ success: true, data } as ApiResponse);
+  } catch (error) {
+    console.error('Customer dashboard error:', error);
     res.status(500).json({ success: false, message: 'Internal server error' } as ApiResponse);
   }
 }

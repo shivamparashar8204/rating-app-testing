@@ -6,6 +6,14 @@ export interface CustomerDashboardStore extends Store {
   user_rating_id?: string | null;
 }
 
+export interface CustomerDashboardData {
+  profile: { id: number; name: string; email: string; address: string | null; role: string } | null;
+  totalRatings: number;
+  avgRatingGiven: number | null;
+  totalStores: number;
+  recentRatings: Rating[];
+}
+
 export const customerApi = {
   getStores: async (search?: string) => {
     const response = await api.get<{ success: boolean; data: CustomerDashboardStore[] }>('/customer/stores', {
@@ -23,6 +31,14 @@ export const customerApi = {
   updateRating: async (ratingId: string, rating: number) => {
     const response = await api.put<{ success: boolean; message: string }>(`/customer/ratings/${ratingId}`, { rating });
     return response.data;
+  },
+  getRatings: async () => {
+    const response = await api.get<{ success: boolean; data: Rating[] }>('/customer/ratings');
+    return response.data.data;
+  },
+  getDashboard: async () => {
+    const response = await api.get<{ success: boolean; data: CustomerDashboardData }>('/customer/dashboard');
+    return response.data.data;
   },
 };
 

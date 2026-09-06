@@ -170,7 +170,9 @@ export interface StoreWithUserRating {
   address: string;
   store_owner_id: number;
   avg_rating: number | null;
+  total_ratings: number;
   user_rating: number | null;
+  user_rating_id: number | null;
 }
 
 export interface RatingWithUser {
